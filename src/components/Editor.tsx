@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type DragEvent } from 'react';
+import { useEffect, useState, type DragEvent, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Estado, FilaFinal, FilaInicial, Medidas, Objetivo } from '@/lib/types';
 import { norm, num } from '@/lib/scoring';
@@ -52,6 +52,37 @@ function N({ id, value, label, onChange }: { id: string; value: number | null; l
   );
 }
 
+function CardField({ label, children }: { label: ReactNode; children: ReactNode }) {
+  return (
+    <div className="card-field">
+      <div className="card-field-label">{label}</div>
+      {children}
+    </div>
+  );
+}
+
+const META_HELP = (
+  <HelpTip label="Ayuda: qué significa Meta">
+    <strong>No pongas el peso al que quieres llegar.</strong>
+    <p>
+      Pon cuántos kilos quieres <em>bajar o subir</em>. Si pesas 100 y quieres llegar a 90, la meta es <strong>10</strong>.
+    </p>
+    <p className="muted small" style={{ marginBottom: 0 }}>
+      Si eliges mantener, no uses meta: cuenta el margen (± kg).
+    </p>
+  </HelpTip>
+);
+
+const MEDIDA_HELP = (
+  <HelpTip label="Ayuda: qué son las medidas">
+    <strong>Cintura, cadera, brazo… en cm</strong>
+    <p>Se anotan al inicio y al final para ver el cambio de cada una.</p>
+    <p className="muted small" style={{ marginBottom: 0 }}>
+      No definen el podio; salen en Destacados y en la ficha de cada persona.
+    </p>
+  </HelpTip>
+);
+
 function statusIni(r: RI): { text: string; kind: string } {
   if (!r.nombre.trim()) return { text: 'Sin nombre', kind: 'warn' };
   if (r.peso == null || r.estatura == null) return { text: 'Falta peso o estatura', kind: 'warn' };
@@ -85,6 +116,15 @@ export default function Editor({ estado, conLogin }: { estado: Estado; conLogin:
   const [armed, setArmed] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [lastFile, setLastFile] = useState<FileInfo | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 719px)');
+    const apply = () => setIsMobile(mq.matches);
+    apply();
+    mq.addEventListener('change', apply);
+    return () => mq.removeEventListener('change', apply);
+  }, []);
 
   const touch = () => setDirty(true);
   const iniNames = new Set(ini.map((r) => norm(r.nombre)).filter(Boolean));
@@ -386,53 +426,256 @@ export default function Editor({ estado, conLogin }: { estado: Estado; conLogin:
           </div>
         </div>
 
-        <p className="captura-scroll-hint muted small">Desliza la tabla →</p>
-        <div className="tbl-wrap captura-scroll" style={{ border: 0, borderRadius: 0 }}>
+        {/* —— Móvil: cards (solo una vista montada para no duplicar inputs) —— */}
+        {isMobile && (
+        <div className="captura-mobile">
+          <div className="captura-mobile-tools">
+            {showMedida ? (
+              <span className="add-medida-inline">
+                <input
+                  className="cell"
+                  placeholder="Ej. Muslo"
+                  value={nuevaM}
+                  autoFocus
+                  onChange={(e) => setNuevaM(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') agregarMedida();
+                    if (e.key === 'Escape') {
+                      setShowMedida(false);
+                      setNuevaM('');
+                    }
+                  }}
+                  aria-label="Nombre de la nueva medida"
+                />
+                <button type="button" className="btn primary" onClick={agregarMedida}>
+                  OK
+                </button>
+                <button
+                  type="button"
+                  className="btn ghost"
+                  onClick={() => {
+                    setShowMedida(false);
+                    setNuevaM('');
+                  }}
+                >
+                  ×
+                </button>
+              </span>
+            ) : (
+              <span className="th-with-help">
+                <button type="button" className="btn table-add" onClick={() => setShowMedida(true)}>
+                  + Medida
+                </button>
+                {MEDIDA_HELP}
+              </span>
+            )}
+            {medidas.length > 0 && (
+              <div className="medida-chips">
+                {medidas.map((m) => (
+                  <span key={m} className="medida-chip">
+                    {m}
+                    <button
+                      type="button"
+                      className="btn icon"
+                      aria-label={`Quitar medida ${m}`}
+                      onClick={() => {
+                        setMedidas((ms) => ms.filter((x) => x !== m));
+                        touch();
+                      }}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {rows.length === 0 && (
+            <p className="muted captura-mobile-empty">
+              {tab === 'fin'
+                ? 'Primero agrega gente en Datos iniciales. Aquí aparecen solas.'
+                : 'Nadie todavía. Sube un Excel o agrega una persona abajo.'}
+            </p>
+          )}
+
+          {tab === 'ini' &&
+            ini.map((r) => {
+              const st = statusIni(r);
+              return (
+                <article key={r.id} className="persona-card">
+                  <header className="persona-card-head">
+                    <span className="avatar sm" style={{ background: colorAvatar(r.nombre || '?') }}>
+                      {iniciales(r.nombre || '?')}
+                    </span>
+                    <input
+                      className="cell persona-card-name"
+                      list="names"
+                      defaultValue={r.nombre}
+                      aria-label="Nombre"
+                      placeholder="Nombre"
+                      onChange={(e) => patchIni(r.id, { nombre: e.target.value })}
+                    />
+                    <span className={`status-chip ${st.kind}`}>{st.text}</span>
+                  </header>
+                  <div className="persona-card-grid">
+                    <CardField label="Objetivo">
+                      <select
+                        className="cell"
+                        value={r.objetivo}
+                        aria-label="Objetivo"
+                        onChange={(e) => patchIni(r.id, { objetivo: e.target.value as Objetivo | '' })}
+                      >
+                        <option value="">Elegir</option>
+                        {(Object.keys(GOALS) as Objetivo[]).map((g) => (
+                          <option key={g} value={g}>
+                            {GOALS[g]}
+                          </option>
+                        ))}
+                      </select>
+                    </CardField>
+                    <CardField
+                      label={
+                        <span className="th-with-help">
+                          Meta (kg) {META_HELP}
+                        </span>
+                      }
+                    >
+                      <N
+                        id={`m-ini-${r.id}-meta`}
+                        value={r.meta}
+                        label="Meta: kilos a bajar o subir"
+                        onChange={(v) => patchIni(r.id, { meta: v })}
+                      />
+                    </CardField>
+                    <CardField label="Peso (kg)">
+                      <N id={`m-ini-${r.id}-peso`} value={r.peso} label="Peso inicial" onChange={(v) => patchIni(r.id, { peso: v })} />
+                    </CardField>
+                    <CardField label="Estatura (cm)">
+                      <N
+                        id={`m-ini-${r.id}-est`}
+                        value={r.estatura}
+                        label="Estatura en cm"
+                        onChange={(v) => patchIni(r.id, { estatura: v })}
+                      />
+                    </CardField>
+                    {medidas.map((m, j) => (
+                      <CardField key={m} label={`${m} (cm)`}>
+                        <N
+                          id={`m-ini-${r.id}-m${j}`}
+                          value={r.m[m] ?? null}
+                          label={`${m} de ${r.nombre}`}
+                          onChange={(v) => patchIniM(r.id, m, v)}
+                        />
+                      </CardField>
+                    ))}
+                  </div>
+                  <footer className="persona-card-foot">
+                    <button
+                      type="button"
+                      className="btn icon"
+                      aria-label={`Quitar a ${r.nombre || 'persona'}`}
+                      onClick={() => {
+                        const clave = norm(r.nombre);
+                        setIni((rs) => rs.filter((x) => x.id !== r.id));
+                        if (clave) setFin((rs) => rs.filter((x) => norm(x.nombre) !== clave));
+                        touch();
+                      }}
+                    >
+                      Quitar
+                    </button>
+                  </footer>
+                </article>
+              );
+            })}
+
+          {tab === 'fin' &&
+            fin.map((r) => {
+              const st = statusFin(r, iniNames);
+              return (
+                <article key={r.id} className="persona-card">
+                  <header className="persona-card-head">
+                    <span className="avatar sm" style={{ background: colorAvatar(r.nombre || '?') }}>
+                      {iniciales(r.nombre || '?')}
+                    </span>
+                    <span className="name-locked persona-card-name">{r.nombre}</span>
+                    <span className={`status-chip ${st.kind}`}>{st.text}</span>
+                  </header>
+                  <div className="persona-card-grid">
+                    <CardField label="Peso (kg)">
+                      <N id={`m-fin-${r.id}-peso`} value={r.peso} label="Peso final" onChange={(v) => patchFin(r.id, { peso: v })} />
+                    </CardField>
+                    {medidas.map((m, j) => (
+                      <CardField key={m} label={`${m} (cm)`}>
+                        <N
+                          id={`m-fin-${r.id}-m${j}`}
+                          value={r.m[m] ?? null}
+                          label={`${m} final de ${r.nombre}`}
+                          onChange={(v) => patchFinM(r.id, m, v)}
+                        />
+                      </CardField>
+                    ))}
+                  </div>
+                  <footer className="persona-card-foot">
+                    <button
+                      type="button"
+                      className="btn icon"
+                      aria-label={`Limpiar datos finales de ${r.nombre}`}
+                      onClick={() => {
+                        setFin((rs) =>
+                          rs.map((x) =>
+                            x.id === r.id ? conId<FilaFinal>({ nombre: r.nombre, peso: null, estatura: null, m: {} }) : x,
+                          ),
+                        );
+                        touch();
+                      }}
+                    >
+                      Limpiar
+                    </button>
+                  </footer>
+                </article>
+              );
+            })}
+
+          {tab === 'ini' && (
+            <button
+              type="button"
+              className="btn table-add row-add-btn captura-add-persona"
+              onClick={() => {
+                setIni((rs) => [
+                  ...rs,
+                  conId<FilaInicial>({ nombre: '', objetivo: '', meta: null, peso: null, estatura: null, m: {} }),
+                ]);
+                touch();
+              }}
+            >
+              + Agregar persona
+            </button>
+          )}
+        </div>
+        )}
+
+        {/* —— Desktop: tabla —— */}
+        {!isMobile && (
+        <div className="captura-desktop tbl-wrap" style={{ border: 0, borderRadius: 0 }}>
           <table className="edit captura-grid">
             <thead>
               <tr>
-                <th>
-                  <span className="th-full">Persona</span>
-                  <span className="th-short">Nombre</span>
-                </th>
+                <th>Persona</th>
                 {tab === 'ini' && (
                   <>
-                    <th>
-                      <span className="th-full">Objetivo</span>
-                      <span className="th-short">Obj.</span>
-                    </th>
+                    <th>Objetivo</th>
                     <th>
                       <span className="th-with-help">
-                        <span className="th-full">Meta (kg)</span>
-                        <span className="th-short">Meta</span>
-                        <HelpTip label="Ayuda: qué significa Meta">
-                          <strong>No pongas el peso al que quieres llegar.</strong>
-                          <p>
-                            Pon cuántos kilos quieres <em>bajar o subir</em>. Si pesas 100 y quieres llegar a 90, la
-                            meta es <strong>10</strong>.
-                          </p>
-                          <p className="muted small" style={{ marginBottom: 0 }}>
-                            Si eliges mantener, no uses meta: cuenta el margen (± kg).
-                          </p>
-                        </HelpTip>
+                        Meta (kg)
+                        {META_HELP}
                       </span>
                     </th>
-                    <th>
-                      <span className="th-full">Peso (kg)</span>
-                      <span className="th-short">Peso</span>
-                    </th>
-                    <th>
-                      <span className="th-full">Estatura (cm)</span>
-                      <span className="th-short">Est.</span>
-                    </th>
+                    <th>Peso (kg)</th>
+                    <th>Estatura (cm)</th>
                   </>
                 )}
-                {tab === 'fin' && (
-                  <th>
-                    <span className="th-full">Peso (kg)</span>
-                    <span className="th-short">Peso</span>
-                  </th>
-                )}
+                {tab === 'fin' && <th>Peso (kg)</th>}
                 {medidas.map((m) => (
                   <th key={m}>
                     {m}{' '}
@@ -487,13 +730,7 @@ export default function Editor({ estado, conLogin }: { estado: Estado; conLogin:
                       <button type="button" className="btn table-add" onClick={() => setShowMedida(true)}>
                         + Medida
                       </button>
-                      <HelpTip label="Ayuda: qué son las medidas">
-                        <strong>Cintura, cadera, brazo… en cm</strong>
-                        <p>Se anotan al inicio y al final para ver el cambio de cada una.</p>
-                        <p className="muted small" style={{ marginBottom: 0 }}>
-                          No definen el podio; salen en Destacados y en la ficha de cada persona.
-                        </p>
-                      </HelpTip>
+                      {MEDIDA_HELP}
                     </span>
                   )}
                 </th>
@@ -653,6 +890,7 @@ export default function Editor({ estado, conLogin }: { estado: Estado; conLogin:
             </tbody>
           </table>
         </div>
+        )}
       </section>
     </div>
   );

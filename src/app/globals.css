@@ -1149,11 +1149,6 @@ html.dark .board-bar { background: var(--surface-2); }
 .file-chip.info { background: #22284a; color: #b8c6ff; }
 .file-chip.warn { background: #3a2a12; color: #ffcf8a; }
 .captura-table { padding: 8px; overflow: hidden; }
-.captura-scroll-hint {
-  display: none;
-  margin: 0 8px 8px;
-}
-.th-short { display: none; }
 .margen-inline {
   display: inline-flex;
   align-items: center;
@@ -1169,6 +1164,92 @@ html.dark .board-bar { background: var(--surface-2); }
   font-weight: 600;
   font-size: 14px;
   min-width: 120px;
+}
+
+.persona-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.persona-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.persona-card-name {
+  flex: 1 1 120px;
+  min-width: 0;
+  font-weight: 600;
+}
+.persona-card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 12px;
+}
+.card-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.card-field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.persona-card .cell {
+  width: 100%;
+  min-height: 44px;
+  font-size: 16px;
+}
+.persona-card-foot {
+  display: flex;
+  justify-content: flex-end;
+}
+.captura-mobile-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.medida-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.medida-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 4px 4px 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--fg);
+}
+.captura-mobile-empty {
+  margin: 8px 0 16px;
+  line-height: 1.4;
+}
+.captura-add-persona {
+  width: 100%;
+  margin-top: 4px;
+  justify-content: center;
+}
+.captura-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 4px 8px;
 }
 
 @media (max-width: 719px) {
@@ -1199,95 +1280,14 @@ html.dark .board-bar { background: var(--surface-2); }
     align-items: stretch;
     gap: 10px;
   }
-  .captura-scroll-hint {
-    display: block;
+  .persona-card-grid {
+    grid-template-columns: 1fr 1fr;
   }
-  .captura-scroll {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-x: contain;
-    scrollbar-width: thin;
-    margin-inline: -4px;
-    padding-bottom: 6px;
-  }
-  .captura-grid {
-    width: max-content;
-    min-width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-  }
-  .captura-grid .th-full { display: none; }
-  .captura-grid .th-short { display: inline; }
-  .captura-grid th,
-  .captura-grid td {
-    padding: 8px 6px;
-    vertical-align: middle;
-  }
-  .captura-grid th:first-child,
-  .captura-grid td:first-child {
-    position: sticky;
-    left: 0;
-    z-index: 2;
-    min-width: 108px;
-    max-width: 120px;
-    box-shadow: 4px 0 10px color-mix(in srgb, var(--ink) 8%, transparent);
-  }
-  .captura-grid thead th:first-child {
-    z-index: 3;
-    background: var(--surface-2);
-  }
-  .captura-grid tbody td:first-child {
-    background: var(--surface);
-  }
-  .captura-grid .name-cell {
-    gap: 6px;
-  }
-  .captura-grid .name-cell .avatar.sm {
-    width: 28px;
-    height: 28px;
-    font-size: 10px;
-    flex: none;
-  }
-  .captura-grid .name-cell .cell {
-    min-width: 0;
-    width: 72px;
-    max-width: 72px;
-    padding: 8px 6px;
-  }
-  .captura-grid .name-locked {
-    min-width: 0;
-    font-size: 13px;
-  }
-  .captura-grid .cell {
-    min-width: 76px;
-    min-height: 44px;
-    font-size: 16px; /* evita zoom en iOS */
-    padding: 8px 6px;
-  }
-  .captura-grid select.cell {
-    min-width: 96px;
-  }
-  .captura-grid td[colspan] {
-    white-space: normal;
-    max-width: min(280px, 72vw);
-    line-height: 1.35;
-  }
-  .captura-grid .row-add td {
-    position: sticky;
-    left: 0;
-    z-index: 1;
-    background: color-mix(in srgb, var(--surface-2) 55%, transparent);
-    min-width: min(100vw - 48px, 360px);
-    max-width: none;
-    box-shadow: none;
-  }
-  .captura-grid .th-add-medida .btn.table-add {
-    padding: 8px 10px;
-    font-size: 12px;
-  }
-  .captura-grid .status-chip {
-    font-size: 11px;
-    padding: 4px 8px;
+}
+
+@media (max-width: 379px) {
+  .persona-card-grid {
+    grid-template-columns: 1fr;
   }
 }
 .cell {
