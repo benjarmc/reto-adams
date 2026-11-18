@@ -38,19 +38,19 @@ export default async function PersonaPage({
   let chipMeta = '';
   if (fila.objetivo === 'mantener') {
     chipMeta = `= Mantener ±${f1(estado.margen)} kg`;
-    metaLine = `Se movió ${f1(Math.abs(fila.dPeso))} kg, dentro del margen de ±${f1(estado.margen)} kg.`;
+    metaLine = `Se movió ${f1(Math.abs(fila.dPeso))} kg (va bien, dentro de ±${f1(estado.margen)} kg).`;
     if (Math.abs(fila.dPeso) > estado.margen) {
-      metaLine = `Se movió ${f1(Math.abs(fila.dPeso))} kg, fuera del margen de ±${f1(estado.margen)} kg.`;
+      metaLine = `Se movió ${f1(Math.abs(fila.dPeso))} kg (pasó el margen de ±${f1(estado.margen)} kg).`;
     }
   } else if (fila.meta == null) {
     chipMeta = fila.objetivo === 'bajar' ? '↓ Bajar' : '↑ Subir';
-    metaLine = 'Sin meta en kg';
+    metaLine = 'Sin meta puesta';
   } else {
     const logro = Math.max(0, fila.fav);
     const falta = Math.max(0, fila.meta - logro);
     chipMeta = `${fila.objetivo === 'bajar' ? '↓ Bajar' : '↑ Subir'} ${f1(fila.meta)} kg`;
-    if (fila.fav >= fila.meta) metaLine = `Logró ${f1(logro)} kg. Superó su meta.`;
-    else metaLine = `Logró ${f1(logro)} kg. Le faltaron ${f1(falta)} kg.`;
+    if (fila.fav >= fila.meta) metaLine = `Logró ${f1(logro)} kg y ya pasó su meta.`;
+    else metaLine = `Va ${f1(logro)} kg; le faltan ${f1(falta)} kg.`;
   }
 
   const catI = categoriaImc(fila.imcI);

@@ -11,12 +11,12 @@ function chip(o: Objetivo | '') {
 }
 
 function metaCelda(r: FilaInicial, margen: number): { principal: string; sub?: string } {
-  if (r.objetivo === 'mantener') return { principal: `±${f1(margen)} kg`, sub: 'Se mide por margen' };
+  if (r.objetivo === 'mantener') return { principal: `±${f1(margen)} kg`, sub: 'Tolerancia para mantener' };
   if (r.objetivo === 'bajar' || r.objetivo === 'subir') {
-    if (r.meta == null || r.meta <= 0) return { principal: '—', sub: 'Falta meta en kg' };
+    if (r.meta == null || r.meta <= 0) return { principal: '—', sub: 'Falta la meta' };
     return {
       principal: `${f1(r.meta)} kg`,
-      sub: r.objetivo === 'bajar' ? 'A bajar' : 'A subir',
+      sub: r.objetivo === 'bajar' ? 'Quiere bajar' : 'Quiere subir',
     };
   }
   return { principal: '—' };
@@ -47,9 +47,9 @@ export default function MetasInicio({
 
       <div className="banner-fase">
         <div>
-          <strong>Inscripción lista · faltan datos finales</strong>
+          <strong>Ya están quiénes van</strong>
           <p className="muted" style={{ margin: '4px 0 0' }}>
-            Ya hay punto de partida. Cuando cargues el corte final en Captura, aquí aparecen podio y rankings.
+            Falta el peso del cierre. Cuando lo cargues en Captura, aquí sale el ranking.
           </p>
         </div>
         <Link className="btn primary" href="/datos">
@@ -62,7 +62,7 @@ export default function MetasInicio({
           {lista.length} participante{lista.length === 1 ? '' : 's'}
         </span>
         <h1 className="hero-title">Metas del reto</h1>
-        <p className="hero-sub">Así quedó cada quien al inicio: objetivo, meta a cambiar y peso de partida.</p>
+        <p className="hero-sub">Objetivo, meta y peso con el que empezó cada quien.</p>
       </section>
 
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -80,6 +80,7 @@ export default function MetasInicio({
             <tbody>
               {lista.map((r) => {
                 const c = chip(r.objetivo);
+                const m = metaCelda(r, margen);
                 return (
                   <tr key={r.nombre}>
                     <td>
@@ -94,17 +95,8 @@ export default function MetasInicio({
                       <span className={c.className}>{c.label}</span>
                     </td>
                     <td>
-                      {(() => {
-                        const m = metaCelda(r, margen);
-                        return (
-                          <>
-                            <span className="num">{m.principal}</span>
-                            {m.sub && (
-                              <div className="muted small">{m.sub}</div>
-                            )}
-                          </>
-                        );
-                      })()}
+                      <span className="num">{m.principal}</span>
+                      {m.sub && <div className="muted small">{m.sub}</div>}
                     </td>
                     <td className="num">{r.peso != null ? `${f1(r.peso)} kg` : '—'}</td>
                     <td className="num">{r.estatura != null ? `${f1(r.estatura, 0)} cm` : '—'}</td>
@@ -118,7 +110,7 @@ export default function MetasInicio({
 
       {pendientes.length > 0 && (
         <div className="card sec">
-          <h2>Pendiente para el ranking</h2>
+          <h2>Aún sin comparar</h2>
           <ul style={{ margin: 0, paddingLeft: 18 }}>
             {pendientes.map((p) => (
               <li key={p.nombre}>

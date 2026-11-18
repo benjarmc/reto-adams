@@ -32,7 +32,7 @@ export default function Login() {
     <form className="card sec login-card" onSubmit={entrar}>
       <h2>Captura de datos</h2>
       <p className="muted small" style={{ margin: 0 }}>
-        Los resultados son públicos. Para cargar o editar datos, entra con la contraseña del reto.
+        Cualquiera puede ver los resultados. Para editar, entra con la contraseña.
       </p>
       <div className="field">
         <label htmlFor="password">Contraseña</label>

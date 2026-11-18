@@ -25,7 +25,7 @@ export default function Header() {
               <span className="brand-name">Reto de Cambio</span>
             </span>
           </Link>
-          {demo && <span className="chip-demo">Datos de ejemplo</span>}
+          {demo && <span className="chip-demo">Ejemplo</span>}
         </div>
         <div className="header-actions">
           <ThemeToggle />

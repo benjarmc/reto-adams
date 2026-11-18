@@ -95,7 +95,7 @@ export function destacados(
     }
     if (best && bestDelta < 0) {
       out.push({
-        titulo: keyC ? 'Mayor reducción de cintura' : `Mayor reducción de ${firstMed}`,
+        titulo: keyC ? 'Más bajó de cintura' : `Más bajó de ${firstMed}`,
         nombre: best.nombre,
         valor: `${sg(bestDelta)} cm`,
         icono: keyC ? 'cintura' : 'medida',
@@ -113,7 +113,7 @@ export function destacados(
   }
   if (bestImc && bestDImc < 0) {
     out.push({
-      titulo: 'Mayor baja de IMC',
+      titulo: 'Más bajó de IMC',
       nombre: bestImc.nombre,
       valor: `${f1(bestImc.imcI)} → ${f1(bestImc.imcF)}`,
       icono: 'imc',

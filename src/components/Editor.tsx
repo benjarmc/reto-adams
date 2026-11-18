@@ -55,7 +55,7 @@ function N({ id, value, label, onChange }: { id: string; value: number | null; l
 function statusIni(r: RI): { text: string; kind: string } {
   if (!r.nombre.trim()) return { text: 'Sin nombre', kind: 'warn' };
   if (r.peso == null || r.estatura == null) return { text: 'Falta peso o estatura', kind: 'warn' };
-  if (r.objetivo === 'mantener') return { text: 'Sin meta: se mide por margen', kind: 'ok' };
+  if (r.objetivo === 'mantener') return { text: 'Ok · usa el margen', kind: 'ok' };
   if ((r.objetivo === 'bajar' || r.objetivo === 'subir') && (r.meta == null || r.meta <= 0)) {
     return { text: 'Falta meta', kind: 'warn' };
   }
@@ -205,7 +205,7 @@ export default function Editor({ estado, conLogin }: { estado: Estado; conLogin:
         setMsg({ text: 'No se pudo guardar. Revisa los datos e intenta de nuevo.', err: true });
       } else {
         setDirty(false);
-        setMsg({ text: 'Guardado. Los resultados ya están actualizados.' });
+        setMsg({ text: 'Guardado. Ya se actualizaron los resultados.' });
         router.refresh();
       }
     } catch {
@@ -234,7 +234,7 @@ export default function Editor({ estado, conLogin }: { estado: Estado; conLogin:
         <div>
           <h1 className="captura-title">Captura de datos</h1>
           <p className="muted" style={{ margin: 0 }}>
-            Sube el Excel o escribe directo en la tabla. Nada se guarda hasta que tocas Guardar.
+            Sube un Excel o llena la tabla. No se guarda hasta que toques Guardar.
           </p>
         </div>
         <div className="tools">
@@ -260,7 +260,7 @@ export default function Editor({ estado, conLogin }: { estado: Estado; conLogin:
           <span className="step-num">1</span>
           <span className="step-text">
             <span className="step-title">Datos iniciales</span>
-            <span className="step-sub">Punto de partida y metas</span>
+            <span className="step-sub">Con lo que empiezan</span>
           </span>
         </button>
         <button
@@ -275,7 +275,7 @@ export default function Editor({ estado, conLogin }: { estado: Estado; conLogin:
           <span className="step-num">2</span>
           <span className="step-text">
             <span className="step-title">Datos finales</span>
-            <span className="step-sub">Mismas personas · solo peso y medidas</span>
+            <span className="step-sub">Peso y medidas al cierre</span>
           </span>
         </button>
       </section>
@@ -398,13 +398,13 @@ export default function Editor({ estado, conLogin }: { estado: Estado; conLogin:
                       <span className="th-with-help">
                         Meta (kg)
                         <HelpTip label="Ayuda: qué significa Meta">
-                          <strong>No es el peso al que quieres llegar.</strong>
+                          <strong>No pongas el peso al que quieres llegar.</strong>
                           <p>
-                            Meta son los <em>kilos que quieres bajar o subir</em>. Ejemplo: pesas 100 kg y quieres
-                            llegar a 90 → Meta = <strong>10</strong>, no 90.
+                            Pon cuántos kilos quieres <em>bajar o subir</em>. Si pesas 100 y quieres llegar a 90, la
+                            meta es <strong>10</strong>.
                           </p>
                           <p className="muted small" style={{ marginBottom: 0 }}>
-                            Quien elige mantenerse no usa Meta: se mide con el margen (± kg).
+                            Si eliges mantener, no uses meta: cuenta el margen (± kg).
                           </p>
                         </HelpTip>
                       </span>
@@ -469,14 +469,10 @@ export default function Editor({ estado, conLogin }: { estado: Estado; conLogin:
                         + Medida
                       </button>
                       <HelpTip label="Ayuda: qué son las medidas">
-                        <strong>Circunferencias en cm</strong>
-                        <p>
-                          Ejemplos: cintura, cadera, brazo. Se capturan al inicio y al final para ver cuánto cambió cada
-                          una.
-                        </p>
+                        <strong>Cintura, cadera, brazo… en cm</strong>
+                        <p>Se anotan al inicio y al final para ver el cambio de cada una.</p>
                         <p className="muted small" style={{ marginBottom: 0 }}>
-                          No entran a los rankings de kilos, % o meta; sí salen en Destacados y en la ficha de cada
-                          persona.
+                          No definen el podio; salen en Destacados y en la ficha de cada persona.
                         </p>
                       </HelpTip>
                     </span>
@@ -491,8 +487,8 @@ export default function Editor({ estado, conLogin }: { estado: Estado; conLogin:
                 <tr>
                   <td colSpan={20} className="muted">
                     {tab === 'fin'
-                      ? 'Primero captura personas en Datos iniciales. Aquí se listan solas.'
-                      : 'Sin personas. Arrastra un Excel o agrega una fila.'}
+                      ? 'Primero agrega gente en Datos iniciales. Aquí aparecen solas.'
+                      : 'Nadie todavía. Sube un Excel o agrega una persona abajo.'}
                   </td>
                 </tr>
               )}

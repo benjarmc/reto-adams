@@ -27,7 +27,7 @@ const mono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'Reto de Cambio · Adams',
-  description: 'Peso, IMC y medidas antes y después. Tres rankings para saber quién avanzó más. Adams Academia de Gimnasia.',
+  description: 'Reto de cambio de Adams Academia de Gimnasia: peso, IMC y medidas, con rankings del progreso.',
 };
 
 const themeBoot = `(function(){try{var t=localStorage.getItem('theme');if(t!=='light'&&t!=='dark'){t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.classList.add(t);document.documentElement.style.colorScheme=t;}catch(e){}})();`;

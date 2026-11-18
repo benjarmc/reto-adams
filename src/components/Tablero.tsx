@@ -39,21 +39,21 @@ const MODES: { key: RankingKey; label: string; short: string; title: string; des
     label: 'Kilos a favor',
     short: 'kilos a favor',
     title: 'Más kilos a favor',
-    desc: 'Cambio de peso en la dirección de su objetivo',
+    desc: 'Quién movió más kilos según su objetivo',
   },
   {
     key: 'pct',
     label: '% de cambio',
     short: 'porcentaje de cambio',
-    title: 'Mayor cambio porcentual',
-    desc: 'Kilos a favor entre el peso inicial',
+    title: 'Mayor % de cambio',
+    desc: 'Respecto al peso con el que empezó',
   },
   {
     key: 'meta',
     label: 'Cumplimiento',
     short: 'cumplimiento de la meta',
-    title: 'Cumplimiento de la meta',
-    desc: 'Kilos a favor ÷ meta a cambiar (no el peso objetivo)',
+    title: 'Quién cumplió su meta',
+    desc: 'Qué tanto logró de lo que se propuso',
   },
 ];
 
@@ -139,14 +139,13 @@ export default function Tablero({
       {esDemo && (
         <div className="banner-fase">
           <div>
-            <strong>Vista de ejemplo</strong>
+            <strong>Esto es solo un ejemplo</strong>
             <p className="muted" style={{ margin: '4px 0 0' }}>
-              Así se ve el tablero con datos de muestra. No son resultados reales. Captura el inicio y el final para
-              ver el tuyo.
+              Para ver el ranking de verdad, carga el inicio y el cierre en Captura.
             </p>
           </div>
           <Link className="btn primary" href="/datos">
-            Empezar en Captura
+            Ir a Captura
           </Link>
         </div>
       )}
@@ -161,10 +160,10 @@ export default function Tablero({
       <div className="hero-board">
         <section className="hero-copy">
           <span className="eyebrow">
-            {esDemo ? 'Ejemplo' : 'Corte final'} · {n} participante{n === 1 ? '' : 's'}
+            {esDemo ? 'Ejemplo' : 'Resultados'} · {n} participante{n === 1 ? '' : 's'}
           </span>
           <h1 className="hero-title">¿Quién avanzó más?</h1>
-          <p className="hero-sub">Cada quien contra su propia meta. Cambia de ranking para ver cómo se mueve el podio.</p>
+          <p className="hero-sub">Tres rankings. Cambia el de arriba para ver el podio de otra forma.</p>
         </section>
         <div className="seg" role="tablist" aria-label="Ranking">
           {MODES.map((m) => (
@@ -250,7 +249,7 @@ export default function Tablero({
               {resumen.enMeta.n} de {resumen.enMeta.total}
             </span>
             <span className="kpi-sub">
-              {resumen.enMeta.nombres.length ? resumen.enMeta.nombres.join(', ') : 'Nadie alcanzó el 100%'}
+              {resumen.enMeta.nombres.length ? resumen.enMeta.nombres.join(', ') : 'Todavía nadie al 100%'}
             </span>
           </div>
         )}
@@ -336,7 +335,7 @@ export default function Tablero({
 
       {pendientes.length > 0 && (
         <div className="card sec">
-          <h2>Sin comparar todavía</h2>
+          <h2>Aún sin comparar</h2>
           <ul style={{ margin: 0, paddingLeft: 18 }}>
             {pendientes.map((p) => (
               <li key={p.nombre}>
