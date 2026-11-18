@@ -1,0 +1,19 @@
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# Base de datos local
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Variables de entorno (el ejemplo sí se versiona)
+.env
+.env.*
+!.env.example
+
+.DS_Store
+npm-debug.log*

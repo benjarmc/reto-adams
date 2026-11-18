@@ -1,0 +1,27 @@
+{
+  "name": "reto-adams",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Reto de cambio entre amigos: peso, IMC y medidas, con tres rankings.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "tsx --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.2.0",
+    "next": "^15.5.29",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3"
+  }
+}
