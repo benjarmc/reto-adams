@@ -598,6 +598,38 @@ details ul {
   padding: 24px 20px;
   border-top: 3px solid var(--first);
 }
+.password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.password-wrap .cell {
+  width: 100%;
+  min-height: 48px;
+  font-size: 16px;
+  padding-right: 44px;
+}
+.password-eye {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+}
+.password-eye:hover { color: var(--fg); background: var(--surface-2); }
+.password-eye:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
 .section-title {
   display: flex;
   flex-wrap: wrap;
@@ -1116,7 +1148,12 @@ html.dark .board-bar { background: var(--surface-2); }
 .file-chip.ok { background: #1e3b2e; color: #7ee2b3; }
 .file-chip.info { background: #22284a; color: #b8c6ff; }
 .file-chip.warn { background: #3a2a12; color: #ffcf8a; }
-.captura-table { padding: 8px; }
+.captura-table { padding: 8px; overflow: hidden; }
+.captura-scroll-hint {
+  display: none;
+  margin: 0 8px 8px;
+}
+.th-short { display: none; }
 .margen-inline {
   display: inline-flex;
   align-items: center;
@@ -1132,6 +1169,126 @@ html.dark .board-bar { background: var(--surface-2); }
   font-weight: 600;
   font-size: 14px;
   min-width: 120px;
+}
+
+@media (max-width: 719px) {
+  .captura-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .captura-head .tools {
+    width: 100%;
+  }
+  .captura-head .btn.primary {
+    flex: 1 1 auto;
+  }
+  .stepper {
+    flex-direction: column;
+  }
+  .step {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+  .dropzone {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px 16px;
+  }
+  .captura-table .table-card-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .captura-scroll-hint {
+    display: block;
+  }
+  .captura-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    margin-inline: -4px;
+    padding-bottom: 6px;
+  }
+  .captura-grid {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  .captura-grid .th-full { display: none; }
+  .captura-grid .th-short { display: inline; }
+  .captura-grid th,
+  .captura-grid td {
+    padding: 8px 6px;
+    vertical-align: middle;
+  }
+  .captura-grid th:first-child,
+  .captura-grid td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    min-width: 108px;
+    max-width: 120px;
+    box-shadow: 4px 0 10px color-mix(in srgb, var(--ink) 8%, transparent);
+  }
+  .captura-grid thead th:first-child {
+    z-index: 3;
+    background: var(--surface-2);
+  }
+  .captura-grid tbody td:first-child {
+    background: var(--surface);
+  }
+  .captura-grid .name-cell {
+    gap: 6px;
+  }
+  .captura-grid .name-cell .avatar.sm {
+    width: 28px;
+    height: 28px;
+    font-size: 10px;
+    flex: none;
+  }
+  .captura-grid .name-cell .cell {
+    min-width: 0;
+    width: 72px;
+    max-width: 72px;
+    padding: 8px 6px;
+  }
+  .captura-grid .name-locked {
+    min-width: 0;
+    font-size: 13px;
+  }
+  .captura-grid .cell {
+    min-width: 76px;
+    min-height: 44px;
+    font-size: 16px; /* evita zoom en iOS */
+    padding: 8px 6px;
+  }
+  .captura-grid select.cell {
+    min-width: 96px;
+  }
+  .captura-grid td[colspan] {
+    white-space: normal;
+    max-width: min(280px, 72vw);
+    line-height: 1.35;
+  }
+  .captura-grid .row-add td {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: color-mix(in srgb, var(--surface-2) 55%, transparent);
+    min-width: min(100vw - 48px, 360px);
+    max-width: none;
+    box-shadow: none;
+  }
+  .captura-grid .th-add-medida .btn.table-add {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  .captura-grid .status-chip {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
 }
 .cell {
   width: 100%;

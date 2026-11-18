@@ -386,17 +386,25 @@ export default function Editor({ estado, conLogin }: { estado: Estado; conLogin:
           </div>
         </div>
 
-        <div className="tbl-wrap" style={{ border: 0, borderRadius: 0 }}>
+        <p className="captura-scroll-hint muted small">Desliza la tabla →</p>
+        <div className="tbl-wrap captura-scroll" style={{ border: 0, borderRadius: 0 }}>
           <table className="edit captura-grid">
             <thead>
               <tr>
-                <th>Persona</th>
+                <th>
+                  <span className="th-full">Persona</span>
+                  <span className="th-short">Nombre</span>
+                </th>
                 {tab === 'ini' && (
                   <>
-                    <th>Objetivo</th>
+                    <th>
+                      <span className="th-full">Objetivo</span>
+                      <span className="th-short">Obj.</span>
+                    </th>
                     <th>
                       <span className="th-with-help">
-                        Meta (kg)
+                        <span className="th-full">Meta (kg)</span>
+                        <span className="th-short">Meta</span>
                         <HelpTip label="Ayuda: qué significa Meta">
                           <strong>No pongas el peso al que quieres llegar.</strong>
                           <p>
@@ -409,11 +417,22 @@ export default function Editor({ estado, conLogin }: { estado: Estado; conLogin:
                         </HelpTip>
                       </span>
                     </th>
-                    <th>Peso (kg)</th>
-                    <th>Estatura (cm)</th>
+                    <th>
+                      <span className="th-full">Peso (kg)</span>
+                      <span className="th-short">Peso</span>
+                    </th>
+                    <th>
+                      <span className="th-full">Estatura (cm)</span>
+                      <span className="th-short">Est.</span>
+                    </th>
                   </>
                 )}
-                {tab === 'fin' && <th>Peso (kg)</th>}
+                {tab === 'fin' && (
+                  <th>
+                    <span className="th-full">Peso (kg)</span>
+                    <span className="th-short">Peso</span>
+                  </th>
+                )}
                 {medidas.map((m) => (
                   <th key={m}>
                     {m}{' '}
