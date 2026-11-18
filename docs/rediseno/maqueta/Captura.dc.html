@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Captura de datos</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@500;600&amp;display=swap">
+<style>
+body{margin:0;background:#F2F3F7}
+a{color:#2F5BFF}a:hover{color:#1C3FD6}
+.cell{width:100%;box-sizing:border-box;font:500 14px 'Geist Mono',monospace;color:#0F1222;background:#F7F8FB;border:1px solid transparent;border-radius:8px;padding:8px 10px;min-height:40px}
+.cell:focus{outline:none;border-color:#2F5BFF;background:#FFFFFF;box-shadow:0 0 0 3px #D6E0FF}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #F2F3F7; color: #0F1222; font-family: Geist, Inter, system-ui, sans-serif; font-size: 15px; line-height: 1.5">
+
+  <header style="background: #FFFFFF; border-bottom: 1px solid #E3E5EC">
+    <div style="max-width: 1240px; margin: 0 auto; padding: 14px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="10" fill="#0F1222"></rect><path d="M9 22 L15 15 L19 19 L25 11" stroke="#FF5B2E" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        <span style="font-family: 'Bricolage Grotesque', Geist, sans-serif; font-weight: 800; font-size: 19px">Reto de Cambio</span>
+      </div>
+      <nav aria-label="Secciones" style="display: flex; gap: 4px; flex-wrap: wrap">
+        <a href="Main.dc.html" style="text-decoration: none; padding: 9px 14px; border-radius: 10px; color: #3D4356; font-weight: 500">Resultados</a>
+        <a href="#" style="text-decoration: none; padding: 9px 14px; border-radius: 10px; background: #0F1222; color: #FFFFFF; font-weight: 600">Captura</a>
+      </nav>
+    </div>
+  </header>
+
+  <main style="max-width: 1240px; margin: 0 auto; padding: 32px 24px 64px; display: flex; flex-direction: column; gap: 24px">
+
+    <section style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', Geist, sans-serif; font-weight: 800; font-size: 44px; letter-spacing: -0.02em; line-height: 1.05">Captura de datos</h1>
+        <p style="margin: 0; color: #5B6175">Sube el Excel o escribe directo en la tabla. Nada se guarda hasta que tocas Guardar.</p>
+      </div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap">
+        <button style="border: 1px solid #D5D8E2; background: #FFFFFF; color: #0F1222; font: 600 14px Geist, sans-serif; padding: 12px 16px; border-radius: 12px; min-height: 44px; cursor: pointer">Descargar plantilla</button>
+        <button style="border: 0; background: #FF5B2E; color: #1B0A03; font: 700 14px Geist, sans-serif; padding: 12px 20px; border-radius: 12px; min-height: 44px; cursor: pointer; box-shadow: 0 6px 18px rgba(255,91,46,.3)">Guardar cambios</button>
+      </div>
+    </section>
+
+    <section aria-label="Fase" style="display: flex; flex-wrap: wrap; gap: 12px">
+      <sc-for list="{{phases}}" as="f" hint-placeholder-count="2">
+        <button onClick="{{f.pick}}" aria-pressed="{{f.pressed}}" style="{{f.style}}">
+          <span style="{{f.numStyle}}">{{f.num}}</span>
+          <span style="display: flex; flex-direction: column; align-items: flex-start; text-align: left">
+            <span style="font-weight: 700; font-size: 16px">{{f.title}}</span>
+            <span style="font-size: 13px; opacity: .8">{{f.sub}}</span>
+          </span>
+        </button>
+      </sc-for>
+    </section>
+
+    <section style="display: flex; flex-wrap: wrap; gap: 24px; align-items: stretch">
+      <label for="excel" style="flex: 1 1 420px; min-width: 0; border: 2px dashed #B9C3E8; background: #FFFFFF; border-radius: 24px; padding: 28px; display: flex; align-items: center; gap: 20px; cursor: pointer">
+        <span style="width: 64px; height: 64px; border-radius: 18px; background: #D6E0FF; display: grid; place-items: center; flex: none">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#1C3FD6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"></path><path d="M7 9l5-5 5 5"></path><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"></path></svg>
+        </span>
+        <span style="display: flex; flex-direction: column; gap: 4px">
+          <span style="font-weight: 700; font-size: 17px">Arrastra tu Excel {{phaseWord}} aquí</span>
+          <span style="color: #5B6175; font-size: 14px">o haz clic para elegirlo · .xlsx, .xls o .csv</span>
+        </span>
+        <input id="excel" type="file" accept=".xlsx,.xls,.csv" style="position: absolute; width: 1px; height: 1px; opacity: 0">
+      </label>
+      <div style="flex: 1 1 320px; min-width: 0; background: #0F1222; color: #FFFFFF; border-radius: 24px; padding: 24px; display: flex; flex-direction: column; gap: 10px">
+        <span style="font-size: 13px; color: #B9BED0">Último archivo leído</span>
+        <span style="font-family: 'Geist Mono', monospace; font-size: 16px">{{fileName}}</span>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap">
+          <span style="font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #1E3B2E; color: #7EE2B3">5 personas</span>
+          <span style="font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #22284A; color: #B8C6FF">Cintura · Cadera · Brazo</span>
+          <span style="font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: #3A2A12; color: #FFCF8A">{{warnText}}</span>
+        </div>
+      </div>
+    </section>
+
+    <section style="background: #FFFFFF; border: 1px solid #E3E5EC; border-radius: 24px; padding: 8px">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; gap: 12px; flex-wrap: wrap">
+        <h2 style="margin: 0; font-family: 'Bricolage Grotesque', Geist, sans-serif; font-size: 22px; font-weight: 700">{{tableTitle}}</h2>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap">
+          <button style="border: 1px solid #D5D8E2; background: #FFFFFF; font: 600 14px Geist, sans-serif; padding: 10px 14px; border-radius: 10px; min-height: 44px; cursor: pointer">+ Persona</button>
+          <button style="border: 1px solid #D5D8E2; background: #FFFFFF; font: 600 14px Geist, sans-serif; padding: 10px 14px; border-radius: 10px; min-height: 44px; cursor: pointer">+ Medida</button>
+        </div>
+      </div>
+      <div style="overflow-x: auto">
+        <table style="width: 100%; border-collapse: separate; border-spacing: 0 4px; font-size: 14px">
+          <thead>
+            <tr>
+              <sc-for list="{{cols}}" as="c" hint-placeholder-count="8">
+                <th style="text-align: left; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #5B6175; padding: 6px 8px; white-space: nowrap">{{c}}</th>
+              </sc-for>
+            </tr>
+          </thead>
+          <tbody>
+            <sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+              <tr>
+                <td style="padding: 0 8px; white-space: nowrap">
+                  <span style="display: flex; align-items: center; gap: 10px">
+                    <span style="width: 34px; height: 34px; border-radius: 999px; display: grid; place-items: center; font-weight: 700; font-size: 13px; {{r.avatarStyle}}">{{r.ini}}</span>
+                    <span style="font-weight: 600">{{r.n}}</span>
+                  </span>
+                </td>
+                <sc-for list="{{r.cells}}" as="v" hint-placeholder-count="7">
+                  <td style="padding: 0 4px; min-width: 84px"><input class="cell" value="{{v.val}}" aria-label="{{v.label}}"></td>
+                </sc-for>
+                <td style="padding: 0 8px; white-space: nowrap"><span style="font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; {{r.statusStyle}}">{{r.status}}</span></td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { phase: 'ini' };
+  }
+  renderVals() {
+    var self = this;
+    var phase = this.state.phase;
+    var people = [
+      { n: 'Rosela', ini: 'RO', bg: '#FFD9CC' },
+      { n: 'Benja', ini: 'BE', bg: '#D6E0FF' },
+      { n: 'Mau', ini: 'MA', bg: '#CDEFE3' },
+      { n: 'Lupita', ini: 'LU', bg: '#F6E1FF' },
+      { n: 'Chuy', ini: 'CH', bg: '#FFF0C2' }
+    ];
+    var ini = [
+      ['Bajar', '4', '68.0', '163', '82', '100', '28'],
+      ['Bajar', '5', '92.5', '175', '104', '106', '34'],
+      ['Subir', '3', '61.0', '172', '74', '92', '29'],
+      ['Mantener', '', '58.4', '158', '70', '94', '26'],
+      ['Bajar', '8', '118.0', '180', '121', '116', '38']
+    ];
+    var fin = [
+      ['65.8', '79.5', '98.5', '27.5'],
+      ['89.1', '100', '104', '33.5'],
+      ['63.2', '75', '93', '30'],
+      ['58.9', '70.5', '94', '26'],
+      ['114.0', '116', '113', '37']
+    ];
+    var iniCols = ['Persona', 'Objetivo', 'Meta (kg)', 'Peso (kg)', 'Estatura (cm)', 'Cintura', 'Cadera', 'Brazo', 'Estado'];
+    var finCols = ['Persona', 'Peso (kg)', 'Cintura', 'Cadera', 'Brazo', 'Estado'];
+    var ok = 'background:#DDF5EA;color:#14583A';
+    var info = 'background:#ECEDF2;color:#3D4356';
+    var rows = people.map(function (p, i) {
+      var vals = phase === 'ini' ? ini[i] : fin[i];
+      var heads = phase === 'ini' ? iniCols.slice(1, 8) : finCols.slice(1, 5);
+      var noMeta = phase === 'ini' && i === 3;
+      return {
+        n: p.n, ini: p.ini, avatarStyle: 'background:' + p.bg,
+        cells: vals.map(function (v, j) { return { val: v, label: heads[j] + ' de ' + p.n }; }),
+        status: noMeta ? 'Sin meta: se mide por margen' : 'Listo',
+        statusStyle: noMeta ? info : ok
+      };
+    });
+    var phases = [
+      { k: 'ini', num: '1', title: 'Datos iniciales', sub: 'Peso, estatura, medidas y objetivo' },
+      { k: 'fin', num: '2', title: 'Datos finales', sub: 'Un mes después: peso y medidas' }
+    ].map(function (f) {
+      var on = f.k === phase;
+      return {
+        num: f.num, title: f.title, sub: f.sub,
+        pressed: on ? 'true' : 'false',
+        pick: function () { self.setState({ phase: f.k }); },
+        style: 'flex: 1 1 280px; display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-radius: 18px; cursor: pointer; font-family: Geist, sans-serif; min-height: 44px; text-align: left; ' +
+          (on ? 'background:#0F1222;color:#FFFFFF;border:1px solid #0F1222' : 'background:#FFFFFF;color:#0F1222;border:1px solid #E3E5EC'),
+        numStyle: 'width: 36px; height: 36px; border-radius: 999px; display: grid; place-items: center; font-weight: 800; font-family: \'Bricolage Grotesque\', Geist, sans-serif; flex: none; ' +
+          (on ? 'background:#FF5B2E;color:#1B0A03' : 'background:#E6E8EF;color:#3D4356')
+      };
+    });
+    return {
+      phases: phases,
+      rows: rows,
+      cols: phase === 'ini' ? iniCols : finCols,
+      phaseWord: phase === 'ini' ? 'inicial' : 'final',
+      fileName: phase === 'ini' ? 'reto-inicial.xlsx' : 'reto-final.xlsx',
+      warnText: phase === 'ini' ? '1 sin meta en kg' : 'Todos cruzan con el inicial',
+      tableTitle: phase === 'ini' ? 'Punto de partida' : 'Resultado final'
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,26 +1,48 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type DragEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Estado, FilaFinal, FilaInicial, Medidas, Objetivo } from '@/lib/types';
 import { norm, num } from '@/lib/scoring';
 import { GOALS } from '@/lib/format';
 import { leerArchivo } from '@/lib/excel';
+import { colorAvatar, iniciales } from '@/lib/insights';
+import HelpTip from '@/components/HelpTip';
 
 type RI = FilaInicial & { id: string };
 type RF = FilaFinal & { id: string };
 type Tab = 'ini' | 'fin';
 type Mensaje = { text: string; err?: boolean } | null;
+type FileInfo = { name: string; personas: number; medidas: string[]; warn?: string };
 
 let seq = 0;
 const uid = () => `r${++seq}`;
 const conId = <T,>(r: T): T & { id: string } => ({ ...r, id: uid() });
 
-/** Entradas sin control de React: así "65." no se convierte en "65" mientras se teclea. */
+/** Arma filas finales desde el inicial; conserva peso/medidas ya capturados. */
+function mergeFinDesdeIni(iniList: { nombre: string }[], fin: RF[]): RF[] {
+  const byKey = new Map<string, RF>();
+  for (const f of fin) {
+    const k = norm(f.nombre);
+    if (k && !byKey.has(k)) byKey.set(k, f);
+  }
+  const out: RF[] = [];
+  const seen = new Set<string>();
+  for (const i of iniList) {
+    const k = norm(i.nombre);
+    if (!k || seen.has(k)) continue;
+    seen.add(k);
+    const prev = byKey.get(k);
+    if (prev) out.push({ ...prev, nombre: i.nombre.trim(), estatura: null });
+    else out.push(conId<FilaFinal>({ nombre: i.nombre.trim(), peso: null, estatura: null, m: {} }));
+  }
+  return out;
+}
+
 function N({ id, value, label, onChange }: { id: string; value: number | null; label: string; onChange: (v: number | null) => void }) {
   return (
     <input
-      className="in num"
+      className="cell"
       id={id}
       inputMode="decimal"
       defaultValue={value ?? ''}
@@ -30,20 +52,42 @@ function N({ id, value, label, onChange }: { id: string; value: number | null; l
   );
 }
 
+function statusIni(r: RI): { text: string; kind: string } {
+  if (!r.nombre.trim()) return { text: 'Sin nombre', kind: 'warn' };
+  if (r.peso == null || r.estatura == null) return { text: 'Falta peso o estatura', kind: 'warn' };
+  if (r.objetivo === 'mantener') return { text: 'Sin meta: se mide por margen', kind: 'ok' };
+  if ((r.objetivo === 'bajar' || r.objetivo === 'subir') && (r.meta == null || r.meta <= 0)) {
+    return { text: 'Falta meta', kind: 'warn' };
+  }
+  if (!r.objetivo) return { text: 'Falta objetivo', kind: 'warn' };
+  return { text: 'Listo', kind: 'ok' };
+}
+
+function statusFin(r: RF, iniNames: Set<string>): { text: string; kind: string } {
+  if (!r.nombre.trim()) return { text: 'Sin nombre', kind: 'warn' };
+  if (!iniNames.has(norm(r.nombre))) return { text: 'No está en el inicial', kind: 'warn' };
+  if (r.peso == null) return { text: 'Falta peso', kind: 'warn' };
+  return { text: 'Listo', kind: 'ok' };
+}
+
 export default function Editor({ estado, conLogin }: { estado: Estado; conLogin: boolean }) {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('ini');
   const [margen, setMargen] = useState(estado.margen);
   const [medidas, setMedidas] = useState<string[]>(estado.medidas);
   const [ini, setIni] = useState<RI[]>(() => estado.inicial.map(conId));
-  const [fin, setFin] = useState<RF[]>(() => estado.final.map(conId));
+  const [fin, setFin] = useState<RF[]>(() => mergeFinDesdeIni(estado.inicial, estado.final.map(conId)));
   const [nuevaM, setNuevaM] = useState('');
+  const [showMedida, setShowMedida] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<Mensaje>(null);
   const [armed, setArmed] = useState<string | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const [lastFile, setLastFile] = useState<FileInfo | null>(null);
 
   const touch = () => setDirty(true);
+  const iniNames = new Set(ini.map((r) => norm(r.nombre)).filter(Boolean));
 
   const patchIni = (id: string, p: Partial<FilaInicial>) => {
     setIni((rs) => rs.map((r) => (r.id === id ? { ...r, ...p } : r)));
@@ -78,27 +122,45 @@ export default function Editor({ estado, conLogin }: { estado: Estado; conLogin:
       const p = await leerArchivo(file);
       if (!p || !p.rows.length) {
         setMsg({ text: 'El archivo necesita al menos las columnas Nombre y Peso, con una fila por persona.', err: true });
+        setLastFile({ name: file.name, personas: 0, medidas: [], warn: 'Sin filas válidas' });
         return;
       }
       if (kind === 'ini') {
-        setIni(p.rows.map(conId));
+        const rows = p.rows.map(conId);
+        setIni(rows);
         setMedidas(p.labels);
+        setFin((prev) => mergeFinDesdeIni(rows, prev));
       } else {
         const meds = [...medidas];
         for (const l of p.labels) if (!meds.some((m) => norm(m) === norm(l))) meds.push(l);
         setMedidas(meds);
-        setFin(
-          p.rows.map((r) => {
-            const m: Medidas = {};
-            for (const l of p.labels) {
-              const destino = meds.find((x) => norm(x) === norm(l)) as string;
-              m[destino] = r.m[l] ?? null;
-            }
-            return conId<FilaFinal>({ nombre: r.nombre, peso: r.peso, estatura: r.estatura, m });
-          }),
-        );
+        const incoming = p.rows.map((r) => {
+          const m: Medidas = {};
+          for (const l of p.labels) {
+            const destino = meds.find((x) => norm(x) === norm(l)) as string;
+            m[destino] = r.m[l] ?? null;
+          }
+          return conId<FilaFinal>({ nombre: r.nombre, peso: r.peso, estatura: null, m });
+        });
+        // Cruza por nombre con quienes ya están en el inicial; no inventa participantes nuevos.
+        setFin((prev) => {
+          const base = mergeFinDesdeIni(ini, prev);
+          const byKey = new Map(incoming.map((r) => [norm(r.nombre), r] as const));
+          return base.map((row) => {
+            const hit = byKey.get(norm(row.nombre));
+            if (!hit) return row;
+            return { ...row, peso: hit.peso, m: { ...row.m, ...hit.m }, estatura: null };
+          });
+        });
       }
       touch();
+      const warn =
+        kind === 'fin'
+          ? p.rows.some((r) => !iniNames.has(norm(r.nombre)))
+            ? 'Hay nombres que no están en el inicial'
+            : undefined
+          : undefined;
+      setLastFile({ name: file.name, personas: p.rows.length, medidas: p.labels, warn });
       setMsg({
         text: `Cargadas ${p.rows.length} personas${p.labels.length ? ` y ${p.labels.length} medidas (${p.labels.join(', ')})` : ''}. Revisa la tabla y toca Guardar.`,
       });
@@ -107,14 +169,13 @@ export default function Editor({ estado, conLogin }: { estado: Estado; conLogin:
     }
   }
 
-  function copiarEncabezados(kind: Tab) {
-    const heads = kind === 'ini' ? ['Nombre', 'Objetivo', 'Meta_kg', 'Peso', 'Estatura', ...medidas] : ['Nombre', 'Peso', ...medidas];
-    const fallo = () => setMsg({ text: `No pude copiar. Escribe estos encabezados en la primera fila de tu Excel: ${heads.join(', ')}`, err: true });
-    try {
-      navigator.clipboard.writeText(heads.join('\t')).then(() => setMsg({ text: 'Encabezados copiados. Pégalos en la primera fila de tu Excel.' }), fallo);
-    } catch {
-      fallo();
-    }
+  async function descargarPlantilla() {
+    const heads = tab === 'ini' ? ['Nombre', 'Objetivo', 'Meta_kg', 'Peso', 'Estatura', ...medidas] : ['Nombre', 'Peso', ...medidas];
+    const XLSX = await import('xlsx');
+    const ws = XLSX.utils.aoa_to_sheet([heads]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, tab === 'ini' ? 'Inicial' : 'Final');
+    XLSX.writeFile(wb, tab === 'ini' ? 'plantilla-inicial.xlsx' : 'plantilla-final.xlsx');
   }
 
   function agregarMedida() {
@@ -122,6 +183,7 @@ export default function Editor({ estado, conLogin }: { estado: Estado; conLogin:
     if (v && !medidas.some((m) => norm(m) === norm(v))) {
       setMedidas([...medidas, v]);
       setNuevaM('');
+      setShowMedida(false);
       touch();
     }
   }
@@ -158,49 +220,115 @@ export default function Editor({ estado, conLogin }: { estado: Estado; conLogin:
     router.refresh();
   }
 
+  function onDrop(e: DragEvent) {
+    e.preventDefault();
+    setDragging(false);
+    void onFile(tab, e.dataTransfer.files?.[0]);
+  }
+
+  const rows = tab === 'ini' ? ini : fin;
+
   return (
-    <div className="sec">
-      <div className="coach-sticky sec">
-        <div className="head-row">
-          <h2>Captura de datos</h2>
-          <div className="tools">
-            <span className={`status${msg?.err ? ' err' : msg && !dirty ? ' ok' : ''}`} role="status">
-              {dirty && !msg?.err ? 'Hay cambios sin guardar.' : msg?.text}
-            </span>
-            <button className="btn primary" onClick={guardar} disabled={saving || !dirty}>
-              {saving ? 'Guardando…' : 'Guardar'}
-            </button>
-            {conLogin && (
-              <button className="btn ghost" onClick={salir}>
-                Salir
-              </button>
-            )}
-          </div>
+    <div className="captura sec">
+      <section className="captura-head">
+        <div>
+          <h1 className="captura-title">Captura de datos</h1>
+          <p className="muted" style={{ margin: 0 }}>
+            Sube el Excel o escribe directo en la tabla. Nada se guarda hasta que tocas Guardar.
+          </p>
         </div>
-        <div className="field">
-          <label htmlFor="margen">Margen para quien busca mantenerse (± kg)</label>
+        <div className="tools">
+          <span className={`status${msg?.err ? ' err' : msg && !dirty ? ' ok' : ''}`} role="status">
+            {dirty && !msg?.err ? 'Hay cambios sin guardar.' : msg?.text}
+          </span>
+          <button type="button" className="btn" onClick={() => void descargarPlantilla()}>
+            Descargar plantilla
+          </button>
+          <button type="button" className="btn primary" onClick={() => void guardar()} disabled={saving || !dirty}>
+            {saving ? 'Guardando…' : 'Guardar cambios'}
+          </button>
+          {conLogin && (
+            <button type="button" className="btn ghost" onClick={() => void salir()}>
+              Salir
+            </button>
+          )}
+        </div>
+      </section>
+
+      <section className="stepper" aria-label="Fase">
+        <button type="button" className={tab === 'ini' ? 'step on' : 'step'} aria-pressed={tab === 'ini'} onClick={() => setTab('ini')}>
+          <span className="step-num">1</span>
+          <span className="step-text">
+            <span className="step-title">Datos iniciales</span>
+            <span className="step-sub">Punto de partida y metas</span>
+          </span>
+        </button>
+        <button
+          type="button"
+          className={tab === 'fin' ? 'step on' : 'step'}
+          aria-pressed={tab === 'fin'}
+          onClick={() => {
+            setFin((prev) => mergeFinDesdeIni(ini, prev));
+            setTab('fin');
+          }}
+        >
+          <span className="step-num">2</span>
+          <span className="step-text">
+            <span className="step-title">Datos finales</span>
+            <span className="step-sub">Mismas personas · solo peso y medidas</span>
+          </span>
+        </button>
+      </section>
+
+      <section className="upload-row">
+        <label
+          className={`dropzone${dragging ? ' over' : ''}`}
+          htmlFor="excel-file"
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragging(true);
+          }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={onDrop}
+        >
+          <span className="drop-icon" aria-hidden="true">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 16V4" />
+              <path d="M7 9l5-5 5 5" />
+              <path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />
+            </svg>
+          </span>
+          <span>
+            <strong>Arrastra tu Excel {tab === 'ini' ? 'inicial' : 'final'} aquí</strong>
+            <span className="muted small" style={{ display: 'block' }}>
+              o haz clic para elegirlo · .xlsx, .xls o .csv
+            </span>
+          </span>
           <input
-            className="in narrow num"
-            id="margen"
-            inputMode="decimal"
-            defaultValue={margen}
+            id="excel-file"
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            className="sr-only"
             onChange={(e) => {
-              const n = num(e.target.value);
-              setMargen(n != null && n > 0 ? n : 1);
-              touch();
+              void onFile(tab, e.target.files?.[0]);
+              e.target.value = '';
             }}
           />
+        </label>
+        <div className="file-summary">
+          <span className="kpi-label">Último archivo leído</span>
+          <span className="num" style={{ fontSize: 16 }}>
+            {lastFile?.name ?? 'Ninguno todavía'}
+          </span>
+          {lastFile && (
+            <div className="file-chips">
+              <span className="file-chip ok">{lastFile.personas} personas</span>
+              {lastFile.medidas.length > 0 && <span className="file-chip info">{lastFile.medidas.join(' · ')}</span>}
+              {lastFile.warn && <span className="file-chip warn">{lastFile.warn}</span>}
+            </div>
+          )}
         </div>
-      </div>
-
-      <div className="tabs" role="tablist" aria-label="Fase de captura">
-        <button className="tab" role="tab" aria-selected={tab === 'ini'} onClick={() => setTab('ini')}>
-          Datos iniciales
-        </button>
-        <button className="tab" role="tab" aria-selected={tab === 'fin'} onClick={() => setTab('fin')}>
-          Datos finales
-        </button>
-      </div>
+      </section>
 
       <datalist id="names">
         {ini
@@ -210,275 +338,307 @@ export default function Editor({ estado, conLogin }: { estado: Estado; conLogin:
           ))}
       </datalist>
 
-      {tab === 'ini' ? (
-        <section className="sec" role="tabpanel">
-          <div className="card sec">
-            <h2>Punto de partida</h2>
-            <p className="muted small" style={{ margin: 0 }}>
-              Carga un Excel o captura a mano. Columnas: <strong>Nombre</strong>, <strong>Objetivo</strong> (bajar,
-              mantener o subir), <strong>Meta_kg</strong>, <strong>Peso</strong> (kg), <strong>Estatura</strong> (cm) y
-              una columna por medida en cm, como Cintura, Cadera o Brazo. El IMC se calcula solo.
-            </p>
-            <div className="tools">
-              <label className="btn primary" htmlFor="file-ini" style={{ cursor: 'pointer' }}>
-                Cargar Excel inicial
-              </label>
-              <input
-                type="file"
-                id="file-ini"
-                accept=".xlsx,.xls,.csv"
-                hidden
-                onChange={(e) => {
-                  void onFile('ini', e.target.files?.[0]);
-                  e.target.value = '';
-                }}
-              />
-              <button className="btn" onClick={() => copiarEncabezados('ini')}>
-                Copiar encabezados
-              </button>
-              <button
-                className="btn"
-                onClick={() => {
-                  setIni((rs) => [...rs, conId<FilaInicial>({ nombre: '', objetivo: '', meta: null, peso: null, estatura: null, m: {} })]);
-                  touch();
-                }}
-              >
-                Agregar persona
-              </button>
-              <button
-                className="btn warn"
-                onClick={() =>
-                  confirmar('ci', () => {
-                    setIni([]);
+      <section className="table-card captura-table">
+        <div className="table-card-head">
+          <div className="tools" style={{ gap: 12 }}>
+            <h2 style={{ margin: 0 }}>{tab === 'ini' ? 'Punto de partida' : 'Resultado final'}</h2>
+            {tab === 'ini' && (
+              <label className="margen-inline">
+                Margen ±
+                <input
+                  className="cell narrow"
+                  id="margen"
+                  inputMode="decimal"
+                  defaultValue={margen}
+                  aria-label="Margen para quien busca mantenerse en kg"
+                  onChange={(e) => {
+                    const n = num(e.target.value);
+                    setMargen(n != null && n > 0 ? n : 1);
                     touch();
-                  })
-                }
-              >
-                {armed === 'ci' ? '¿Seguro? Toca otra vez' : 'Vaciar tabla'}
-              </button>
-            </div>
-            <div className="tools">
-              <label className="small muted" htmlFor="newm">
-                Otra medida
+                  }}
+                />
+                kg
               </label>
-              <input
-                className="in narrow"
-                id="newm"
-                placeholder="Ej. Muslo"
-                value={nuevaM}
-                onChange={(e) => setNuevaM(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && agregarMedida()}
-              />
-              <button className="btn" onClick={agregarMedida}>
-                Agregar medida
-              </button>
-            </div>
+            )}
           </div>
-          <div className="tbl-wrap">
-            <table className="edit">
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Objetivo</th>
-                  <th>Meta (kg)</th>
-                  <th>Peso (kg)</th>
-                  <th>Estatura (cm)</th>
-                  {medidas.map((m) => (
-                    <th key={m}>
-                      {m} (cm){' '}
+          <div className="tools">
+            <button
+              type="button"
+              className="btn warn"
+              onClick={() =>
+                confirmar(tab === 'ini' ? 'ci' : 'cf', () => {
+                  if (tab === 'ini') {
+                    setIni([]);
+                    setFin([]);
+                  } else {
+                    setFin(mergeFinDesdeIni(ini, []));
+                  }
+                  touch();
+                })
+              }
+            >
+              {armed === (tab === 'ini' ? 'ci' : 'cf')
+                ? '¿Seguro? Toca otra vez'
+                : tab === 'ini'
+                  ? 'Vaciar tabla'
+                  : 'Limpiar finales'}
+            </button>
+          </div>
+        </div>
+
+        <div className="tbl-wrap" style={{ border: 0, borderRadius: 0 }}>
+          <table className="edit captura-grid">
+            <thead>
+              <tr>
+                <th>Persona</th>
+                {tab === 'ini' && (
+                  <>
+                    <th>Objetivo</th>
+                    <th>
+                      <span className="th-with-help">
+                        Meta (kg)
+                        <HelpTip label="Ayuda: qué significa Meta">
+                          <strong>No es el peso al que quieres llegar.</strong>
+                          <p>
+                            Meta son los <em>kilos que quieres bajar o subir</em>. Ejemplo: pesas 100 kg y quieres
+                            llegar a 90 → Meta = <strong>10</strong>, no 90.
+                          </p>
+                          <p className="muted small" style={{ marginBottom: 0 }}>
+                            Quien elige mantenerse no usa Meta: se mide con el margen (± kg).
+                          </p>
+                        </HelpTip>
+                      </span>
+                    </th>
+                    <th>Peso (kg)</th>
+                    <th>Estatura (cm)</th>
+                  </>
+                )}
+                {tab === 'fin' && <th>Peso (kg)</th>}
+                {medidas.map((m) => (
+                  <th key={m}>
+                    {m}{' '}
+                    <button
+                      type="button"
+                      className="btn icon"
+                      aria-label={`Quitar medida ${m}`}
+                      onClick={() => {
+                        setMedidas((ms) => ms.filter((x) => x !== m));
+                        touch();
+                      }}
+                    >
+                      ×
+                    </button>
+                  </th>
+                ))}
+                <th className="th-add-medida">
+                  {showMedida ? (
+                    <span className="add-medida-inline">
+                      <input
+                        className="cell"
+                        style={{ width: 110 }}
+                        placeholder="Ej. Muslo"
+                        value={nuevaM}
+                        autoFocus
+                        onChange={(e) => setNuevaM(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') agregarMedida();
+                          if (e.key === 'Escape') {
+                            setShowMedida(false);
+                            setNuevaM('');
+                          }
+                        }}
+                        aria-label="Nombre de la nueva medida"
+                      />
+                      <button type="button" className="btn primary" onClick={agregarMedida}>
+                        OK
+                      </button>
                       <button
-                        className="btn icon"
-                        aria-label={`Quitar medida ${m}`}
+                        type="button"
+                        className="btn ghost"
                         onClick={() => {
-                          setMedidas((ms) => ms.filter((x) => x !== m));
-                          touch();
+                          setShowMedida(false);
+                          setNuevaM('');
                         }}
                       >
                         ×
                       </button>
-                    </th>
-                  ))}
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {ini.length === 0 && (
-                  <tr>
-                    <td colSpan={6 + medidas.length} className="muted">
-                      Sin personas. Carga un Excel o agrega una fila.
-                    </td>
-                  </tr>
-                )}
-                {ini.map((r) => (
-                  <tr key={r.id}>
-                    <td>
-                      <input
-                        className="in"
-                        id={`ini-${r.id}-nombre`}
-                        list="names"
-                        defaultValue={r.nombre}
-                        aria-label="Nombre"
-                        onChange={(e) => patchIni(r.id, { nombre: e.target.value })}
-                      />
-                    </td>
-                    <td>
-                      <select
-                        className="in"
-                        id={`ini-${r.id}-objetivo`}
-                        value={r.objetivo}
-                        aria-label="Objetivo"
-                        onChange={(e) => patchIni(r.id, { objetivo: e.target.value as Objetivo | '' })}
-                      >
-                        <option value="">Elegir</option>
-                        {(Object.keys(GOALS) as Objetivo[]).map((g) => (
-                          <option key={g} value={g}>
-                            {GOALS[g]}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td>
-                      <N id={`ini-${r.id}-meta`} value={r.meta} label="Meta en kilos" onChange={(v) => patchIni(r.id, { meta: v })} />
-                    </td>
-                    <td>
-                      <N id={`ini-${r.id}-peso`} value={r.peso} label="Peso inicial" onChange={(v) => patchIni(r.id, { peso: v })} />
-                    </td>
-                    <td>
-                      <N id={`ini-${r.id}-est`} value={r.estatura} label="Estatura en cm" onChange={(v) => patchIni(r.id, { estatura: v })} />
-                    </td>
-                    {medidas.map((m, j) => (
-                      <td key={m}>
-                        <N id={`ini-${r.id}-m${j}`} value={r.m[m] ?? null} label={`${m} de ${r.nombre}`} onChange={(v) => patchIniM(r.id, m, v)} />
-                      </td>
-                    ))}
-                    <td>
-                      <button
-                        className="btn icon"
-                        aria-label={`Quitar a ${r.nombre || 'persona'}`}
-                        onClick={() => {
-                          setIni((rs) => rs.filter((x) => x.id !== r.id));
-                          touch();
-                        }}
-                      >
-                        Quitar
+                    </span>
+                  ) : (
+                    <span className="th-with-help">
+                      <button type="button" className="btn table-add" onClick={() => setShowMedida(true)}>
+                        + Medida
                       </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      ) : (
-        <section className="sec" role="tabpanel">
-          <div className="card sec">
-            <h2>Resultado final</h2>
-            <p className="muted small" style={{ margin: 0 }}>
-              Mismas columnas de peso y medidas que en el inicial, con el mismo nombre de cada persona. El objetivo y la
-              meta se toman de los datos iniciales. La estatura es opcional.
-            </p>
-            <div className="tools">
-              <label className="btn primary" htmlFor="file-fin" style={{ cursor: 'pointer' }}>
-                Cargar Excel final
-              </label>
-              <input
-                type="file"
-                id="file-fin"
-                accept=".xlsx,.xls,.csv"
-                hidden
-                onChange={(e) => {
-                  void onFile('fin', e.target.files?.[0]);
-                  e.target.value = '';
-                }}
-              />
-              <button className="btn" onClick={() => copiarEncabezados('fin')}>
-                Copiar encabezados
-              </button>
-              <button
-                className="btn"
-                onClick={() => {
-                  setFin((rs) => [...rs, conId<FilaFinal>({ nombre: '', peso: null, estatura: null, m: {} })]);
-                  touch();
-                }}
-              >
-                Agregar persona
-              </button>
-              <button
-                className="btn warn"
-                onClick={() =>
-                  confirmar('cf', () => {
-                    setFin([]);
-                    touch();
-                  })
-                }
-              >
-                {armed === 'cf' ? '¿Seguro? Toca otra vez' : 'Vaciar tabla'}
-              </button>
-            </div>
-          </div>
-          <div className="tbl-wrap">
-            <table className="edit">
-              <thead>
+                      <HelpTip label="Ayuda: qué son las medidas">
+                        <strong>Circunferencias en cm</strong>
+                        <p>
+                          Ejemplos: cintura, cadera, brazo. Se capturan al inicio y al final para ver cuánto cambió cada
+                          una.
+                        </p>
+                        <p className="muted small" style={{ marginBottom: 0 }}>
+                          No entran a los rankings de kilos, % o meta; sí salen en Destacados y en la ficha de cada
+                          persona.
+                        </p>
+                      </HelpTip>
+                    </span>
+                  )}
+                </th>
+                <th>Estado</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {rows.length === 0 && (
                 <tr>
-                  <th>Nombre</th>
-                  <th>Peso (kg)</th>
-                  <th>Estatura (cm, opcional)</th>
-                  {medidas.map((m) => (
-                    <th key={m}>{m} (cm)</th>
-                  ))}
-                  <th />
+                  <td colSpan={20} className="muted">
+                    {tab === 'fin'
+                      ? 'Primero captura personas en Datos iniciales. Aquí se listan solas.'
+                      : 'Sin personas. Arrastra un Excel o agrega una fila.'}
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {fin.length === 0 && (
-                  <tr>
-                    <td colSpan={4 + medidas.length} className="muted">
-                      Sin personas. Carga un Excel o agrega una fila.
-                    </td>
-                  </tr>
-                )}
-                {fin.map((r) => (
-                  <tr key={r.id}>
-                    <td>
-                      <input
-                        className="in"
-                        id={`fin-${r.id}-nombre`}
-                        list="names"
-                        defaultValue={r.nombre}
-                        aria-label="Nombre"
-                        onChange={(e) => patchFin(r.id, { nombre: e.target.value })}
-                      />
-                    </td>
-                    <td>
-                      <N id={`fin-${r.id}-peso`} value={r.peso} label="Peso final" onChange={(v) => patchFin(r.id, { peso: v })} />
-                    </td>
-                    <td>
-                      <N id={`fin-${r.id}-est`} value={r.estatura} label="Estatura final en cm (opcional)" onChange={(v) => patchFin(r.id, { estatura: v })} />
-                    </td>
-                    {medidas.map((m, j) => (
-                      <td key={m}>
-                        <N id={`fin-${r.id}-m${j}`} value={r.m[m] ?? null} label={`${m} final de ${r.nombre}`} onChange={(v) => patchFinM(r.id, m, v)} />
+              )}
+              {tab === 'ini' &&
+                ini.map((r) => {
+                  const st = statusIni(r);
+                  return (
+                    <tr key={r.id}>
+                      <td>
+                        <span className="name-cell">
+                          <span className="avatar sm" style={{ background: colorAvatar(r.nombre || '?') }}>
+                            {iniciales(r.nombre || '?')}
+                          </span>
+                          <input
+                            className="cell"
+                            list="names"
+                            defaultValue={r.nombre}
+                            aria-label="Nombre"
+                            onChange={(e) => patchIni(r.id, { nombre: e.target.value })}
+                          />
+                        </span>
                       </td>
-                    ))}
-                    <td>
-                      <button
-                        className="btn icon"
-                        aria-label={`Quitar a ${r.nombre || 'persona'}`}
-                        onClick={() => {
-                          setFin((rs) => rs.filter((x) => x.id !== r.id));
-                          touch();
-                        }}
-                      >
-                        Quitar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
+                      <td>
+                        <select
+                          className="cell"
+                          value={r.objetivo}
+                          aria-label="Objetivo"
+                          onChange={(e) => patchIni(r.id, { objetivo: e.target.value as Objetivo | '' })}
+                        >
+                          <option value="">Elegir</option>
+                          {(Object.keys(GOALS) as Objetivo[]).map((g) => (
+                            <option key={g} value={g}>
+                              {GOALS[g]}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td>
+                        <N
+                          id={`ini-${r.id}-meta`}
+                          value={r.meta}
+                          label="Meta: kilos a bajar o subir (no el peso objetivo)"
+                          onChange={(v) => patchIni(r.id, { meta: v })}
+                        />
+                      </td>
+                      <td>
+                        <N id={`ini-${r.id}-peso`} value={r.peso} label="Peso inicial" onChange={(v) => patchIni(r.id, { peso: v })} />
+                      </td>
+                      <td>
+                        <N id={`ini-${r.id}-est`} value={r.estatura} label="Estatura en cm" onChange={(v) => patchIni(r.id, { estatura: v })} />
+                      </td>
+                      {medidas.map((m, j) => (
+                        <td key={m}>
+                          <N id={`ini-${r.id}-m${j}`} value={r.m[m] ?? null} label={`${m} de ${r.nombre}`} onChange={(v) => patchIniM(r.id, m, v)} />
+                        </td>
+                      ))}
+                      <td className="td-add-medida" />
+                      <td>
+                        <span className={`status-chip ${st.kind}`}>{st.text}</span>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="btn icon"
+                          aria-label={`Quitar a ${r.nombre || 'persona'}`}
+                          onClick={() => {
+                            const clave = norm(r.nombre);
+                            setIni((rs) => rs.filter((x) => x.id !== r.id));
+                            if (clave) setFin((rs) => rs.filter((x) => norm(x.nombre) !== clave));
+                            touch();
+                          }}
+                        >
+                          Quitar
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              {tab === 'ini' && (
+                <tr className="row-add">
+                  <td colSpan={8 + medidas.length}>
+                    <button
+                      type="button"
+                      className="btn table-add row-add-btn"
+                      onClick={() => {
+                        setIni((rs) => [
+                          ...rs,
+                          conId<FilaInicial>({ nombre: '', objetivo: '', meta: null, peso: null, estatura: null, m: {} }),
+                        ]);
+                        touch();
+                      }}
+                    >
+                      + Agregar persona
+                    </button>
+                  </td>
+                </tr>
+              )}
+              {tab === 'fin' &&
+                fin.map((r) => {
+                  const st = statusFin(r, iniNames);
+                  return (
+                    <tr key={r.id}>
+                      <td>
+                        <span className="name-cell">
+                          <span className="avatar sm" style={{ background: colorAvatar(r.nombre || '?') }}>
+                            {iniciales(r.nombre || '?')}
+                          </span>
+                          <span className="name-locked">{r.nombre}</span>
+                        </span>
+                      </td>
+                      <td>
+                        <N id={`fin-${r.id}-peso`} value={r.peso} label="Peso final" onChange={(v) => patchFin(r.id, { peso: v })} />
+                      </td>
+                      {medidas.map((m, j) => (
+                        <td key={m}>
+                          <N id={`fin-${r.id}-m${j}`} value={r.m[m] ?? null} label={`${m} final de ${r.nombre}`} onChange={(v) => patchFinM(r.id, m, v)} />
+                        </td>
+                      ))}
+                      <td className="td-add-medida" />
+                      <td>
+                        <span className={`status-chip ${st.kind}`}>{st.text}</span>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="btn icon"
+                          aria-label={`Limpiar datos finales de ${r.nombre}`}
+                          onClick={() => {
+                            setFin((rs) =>
+                              rs.map((x) =>
+                                x.id === r.id ? conId<FilaFinal>({ nombre: r.nombre, peso: null, estatura: null, m: {} }) : x,
+                              ),
+                            );
+                            touch();
+                          }}
+                        >
+                          Limpiar
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 }

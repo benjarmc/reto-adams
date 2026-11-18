@@ -37,13 +37,14 @@ export default function Login() {
       <div className="field">
         <label htmlFor="password">Contraseña</label>
         <input
-          className="in"
+          className="cell"
           id="password"
           type="password"
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          style={{ minHeight: 48, fontSize: 16 }}
         />
       </div>
       {error && (

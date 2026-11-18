@@ -6,9 +6,9 @@ services:
     image: reto-adams:latest
     restart: unless-stopped
     ports:
-      # Puerto del servidor donde se publica la app. Dentro del contenedor siempre es 3000.
-      # Si el 3000 está ocupado, define en .env (o en Environment de Dokploy): HOST_PORT=3100
-      - "${HOST_PORT:-3000}:3000"
+      # Puerto del host. Dentro del contenedor siempre es 3000.
+      # En .env: HOST_PORT=3100 (o PORT=3100). Preferimos HOST_PORT.
+      - "${HOST_PORT:-${PORT:-3000}}:3000"
     environment:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       SESSION_SECRET: ${SESSION_SECRET:-}

@@ -50,16 +50,19 @@ Acepta `.xlsx`, `.xls` y `.csv` (primera hoja). Los encabezados no distinguen ma
 | `SESSION_SECRET` | Firma de la sesión. Si falta, se usa `ADMIN_PASSWORD`. | — |
 | `DATABASE_PATH` | Ruta del archivo SQLite. | `./data/reto.db` (en Docker: `/data/reto.db`) |
 | `SEED_DEMO` | `true` carga 5 personas de ejemplo la primera vez con la base vacía. No se vuelven a cargar después de vaciar. | `false` |
-| `HOST_PORT` | Puerto del servidor donde se publica la app con `docker compose` o Dokploy tipo Compose. El contenedor siempre escucha en 3000. | `3000` |
+| `PORT` | Puerto de `npm run dev` / `npm start` (Next.js). | `3000` |
+| `HOST_PORT` | Puerto del host con `docker compose` (mapea al 3000 del contenedor). En Dokploy Compose, si el 3000 del servidor está ocupado. | `3000` |
 
 ## Desarrollo local
 
 ```bash
 cp .env.example .env.local     # ajusta ADMIN_PASSWORD
 npm install
-npm run dev                    # http://localhost:3000
+npm run dev                    # http://localhost:3000 (o el PORT de .env)
 npm test                       # pruebas del cálculo, el parser de Excel y la validación
 ```
+
+En `.env`, `PORT` controla el servidor local; `HOST_PORT` solo el mapeo de Docker Compose. Pon el mismo número en ambos si quieres el mismo puerto en los dos flujos.
 
 La base se crea sola en `./data/reto.db`.
 

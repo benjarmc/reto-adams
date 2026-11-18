@@ -7,9 +7,9 @@
     "node": ">=26 <27"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/with-env.mjs dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node scripts/with-env.mjs start",
     "test": "tsx --test tests/*.test.ts"
   },
   "dependencies": {

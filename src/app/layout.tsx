@@ -1,51 +1,46 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { Saira_Condensed, Source_Sans_3 } from 'next/font/google';
-import Image from 'next/image';
-import Link from 'next/link';
-import Nav from '@/components/Nav';
+import { Bricolage_Grotesque, Geist, Geist_Mono } from 'next/font/google';
+import Header from '@/components/Header';
 
-const saira = Saira_Condensed({
+const display = Bricolage_Grotesque({
   subsets: ['latin'],
-  weight: ['600', '700'],
-  variable: '--font-saira',
+  weight: ['700', '800'],
+  variable: '--font-bricolage',
   display: 'swap',
 });
 
-const source = Source_Sans_3({
+const body = Geist({
   subsets: ['latin'],
-  weight: ['400', '600', '700'],
-  variable: '--font-source',
+  weight: ['400', '500', '600'],
+  variable: '--font-geist',
+  display: 'swap',
+});
+
+const mono = Geist_Mono({
+  subsets: ['latin'],
+  weight: ['500', '600'],
+  variable: '--font-geist-mono',
   display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: 'Reto de Cambio · Adams Academia',
-  description: 'Peso, IMC y medidas antes y después. Tres rankings para saber quién avanzó más.',
-  icons: { icon: '/logo-adams.png' },
+  title: 'Reto de Cambio · Adams',
+  description: 'Peso, IMC y medidas antes y después. Tres rankings para saber quién avanzó más. Adams Academia de Gimnasia.',
 };
+
+const themeBoot = `(function(){try{var t=localStorage.getItem('theme');if(t!=='light'&&t!=='dark'){t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.classList.add(t);document.documentElement.style.colorScheme=t;}catch(e){}})();`;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es" className={`${saira.variable} ${source.variable}`}>
+    <html lang="es" className={`${display.variable} ${body.variable} ${mono.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBoot }} />
+      </head>
       <body>
-        <div className="wrap">
-          <header className="brand-bar">
-            <Link href="/" className="brand-mark">
-              <Image src="/logo-adams.png" alt="Adams Academia de Gimnasia" width={64} height={64} priority unoptimized />
-              <div className="brand-copy">
-                <p className="academy">Adams · Academia de Gimnasia</p>
-                <h1>Reto de Cambio</h1>
-                <p className="lede">
-                  Cada quien parte de su meta. El marcador muestra quién avanzó más — kilos, porcentaje y cumplimiento.
-                </p>
-              </div>
-            </Link>
-          </header>
-          <Nav />
-          {children}
-        </div>
+        <Header />
+        <div className="wrap">{children}</div>
       </body>
     </html>
   );

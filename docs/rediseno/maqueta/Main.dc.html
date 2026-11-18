@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Resultados del reto</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@500;600&amp;display=swap">
+<style>
+body{margin:0;background:#F2F3F7}
+a{color:#2F5BFF}a:hover{color:#1C3FD6}
+.bar-fill{transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.podium-col{transition:height .6s cubic-bezier(.2,.8,.2,1)}
+.lift{transition:transform .2s ease, box-shadow .2s ease}
+.lift:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(15,18,34,.08)}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #F2F3F7; color: #0F1222; font-family: Geist, Inter, system-ui, sans-serif; font-size: 15px; line-height: 1.5">
+
+  <header style="background: #FFFFFF; border-bottom: 1px solid #E3E5EC">
+    <div style="max-width: 1240px; margin: 0 auto; padding: 14px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="10" fill="#0F1222"></rect><path d="M9 22 L15 15 L19 19 L25 11" stroke="#FF5B2E" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        <span style="font-family: 'Bricolage Grotesque', Geist, sans-serif; font-weight: 800; font-size: 19px; letter-spacing: -0.01em">Reto de Cambio</span>
+        <span style="font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: #FFE8E0; color: #9A2E10">Datos de ejemplo</span>
+      </div>
+      <nav aria-label="Secciones" style="display: flex; gap: 4px; flex-wrap: wrap">
+        <a href="#" style="text-decoration: none; padding: 9px 14px; border-radius: 10px; background: #0F1222; color: #FFFFFF; font-weight: 600">Resultados</a>
+        <a href="Captura.dc.html" style="text-decoration: none; padding: 9px 14px; border-radius: 10px; color: #3D4356; font-weight: 500">Captura</a>
+      </nav>
+    </div>
+  </header>
+
+  <main style="max-width: 1240px; margin: 0 auto; padding: 32px 24px 64px; display: flex; flex-direction: column; gap: 28px">
+
+    <section style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px">
+      <div style="display: flex; flex-direction: column; gap: 8px; max-width: 640px">
+        <span style="font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #5B6175">Corte final · 5 participantes · [FECHAS DEL RETO]</span>
+        <h1 style="margin: 0; font-family: 'Bricolage Grotesque', Geist, sans-serif; font-weight: 800; font-size: 56px; line-height: 1; letter-spacing: -0.03em">¿Quién avanzó más?</h1>
+        <p style="margin: 0; color: #5B6175; font-size: 16px">Cada quien contra su propia meta. Cambia de ranking para ver cómo se mueve el podio.</p>
+      </div>
+      <div role="tablist" aria-label="Ranking" style="display: flex; gap: 4px; padding: 4px; background: #E6E8EF; border-radius: 14px; flex-wrap: wrap">
+        <sc-for list="{{modes}}" as="m" hint-placeholder-count="3">
+          <button role="tab" aria-selected="{{m.selected}}" onClick="{{m.pick}}" style="{{m.style}}">{{m.label}}</button>
+        </sc-for>
+      </div>
+    </section>
+
+    <section aria-label="Podio" style="background: #FFFFFF; border: 1px solid #E3E5EC; border-radius: 24px; padding: 28px 28px 0; display: flex; flex-direction: column; gap: 8px; overflow: hidden">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: baseline">
+        <h2 style="margin: 0; font-family: 'Bricolage Grotesque', Geist, sans-serif; font-size: 22px; font-weight: 700">{{current.title}}</h2>
+        <span style="color: #5B6175; font-size: 14px">{{current.desc}}</span>
+      </div>
+      <div style="display: flex; align-items: flex-end; gap: 16px; padding-top: 24px">
+        <sc-for list="{{podium}}" as="p" hint-placeholder-count="3">
+          <div style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 10px">
+            <div style="width: 64px; height: 64px; border-radius: 999px; display: grid; place-items: center; font-family: 'Bricolage Grotesque', Geist, sans-serif; font-weight: 800; font-size: 22px; color: #0F1222; {{p.avatarStyle}}">{{p.ini}}</div>
+            <div style="text-align: center; min-width: 0">
+              <div style="font-weight: 600; font-size: 17px">{{p.n}}</div>
+              <div style="font-family: 'Geist Mono', monospace; font-weight: 600; font-size: 28px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums">{{p.v}}</div>
+              <div style="color: #5B6175; font-size: 13px">{{p.sub}}</div>
+            </div>
+            <div class="podium-col" style="width: 100%; border-radius: 16px 16px 0 0; display: flex; justify-content: center; padding-top: 14px; font-family: 'Bricolage Grotesque', Geist, sans-serif; font-weight: 800; font-size: 40px; {{p.colStyle}}">{{p.pos}}</div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-wrap: wrap; gap: 16px">
+      <div class="lift" style="flex: 1 1 200px; background: #0F1222; color: #FFFFFF; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 13px; color: #B9BED0">Bajados entre todos</span>
+        <span style="font-family: 'Geist Mono', monospace; font-size: 34px; font-weight: 600">9.6 kg</span>
+        <span style="font-size: 13px; color: #B9BED0">Rosela, Benja y Chuy</span>
+      </div>
+      <div class="lift" style="flex: 1 1 200px; background: #FFFFFF; border: 1px solid #E3E5EC; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 13px; color: #5B6175">Cintura promedio</span>
+        <span style="font-family: 'Geist Mono', monospace; font-size: 34px; font-weight: 600; color: #1C7A4E">−2.0 cm</span>
+        <span style="font-size: 13px; color: #5B6175">De 90.2 a 88.2 cm</span>
+      </div>
+      <div class="lift" style="flex: 1 1 200px; background: #FFFFFF; border: 1px solid #E3E5EC; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 13px; color: #5B6175">Llegaron a su meta</span>
+        <span style="font-family: 'Geist Mono', monospace; font-size: 34px; font-weight: 600">1 de 5</span>
+        <span style="font-size: 13px; color: #5B6175">Lupita se mantuvo en ±1 kg</span>
+      </div>
+      <div class="lift" style="flex: 1 1 200px; background: #FFFFFF; border: 1px solid #E3E5EC; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 13px; color: #5B6175">Subió de masa</span>
+        <span style="font-family: 'Geist Mono', monospace; font-size: 34px; font-weight: 600; color: #2F5BFF">+2.2 kg</span>
+        <span style="font-size: 13px; color: #5B6175">Mau, con brazo +1.0 cm</span>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+      <div style="flex: 999 1 560px; min-width: 0; background: #FFFFFF; border: 1px solid #E3E5EC; border-radius: 24px; padding: 8px 8px 12px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; padding: 16px 16px 8px; gap: 8px; flex-wrap: wrap">
+          <h2 style="margin: 0; font-family: 'Bricolage Grotesque', Geist, sans-serif; font-size: 22px; font-weight: 700">Tabla completa</h2>
+          <span style="color: #5B6175; font-size: 14px">Ordenada por {{current.short}}</span>
+        </div>
+        <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px">
+          <sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+            <li class="lift" style="display: grid; grid-template-columns: 32px 44px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 16px">
+              <span style="font-family: 'Geist Mono', monospace; font-weight: 600; color: #5B6175; text-align: center">{{r.pos}}</span>
+              <span style="width: 44px; height: 44px; border-radius: 999px; display: grid; place-items: center; font-weight: 700; color: #0F1222; {{r.avatarStyle}}">{{r.ini}}</span>
+              <span style="min-width: 0; display: flex; flex-direction: column; gap: 6px">
+                <span style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+                  <span style="font-weight: 600; font-size: 16px">{{r.n}}</span>
+                  <span style="font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; {{r.chipStyle}}">{{r.obj}}</span>
+                </span>
+                <span style="height: 8px; border-radius: 999px; background: #EEF0F5; overflow: hidden; display: block">
+                  <span class="bar-fill" style="display: block; height: 100%; border-radius: 999px; {{r.barStyle}}"></span>
+                </span>
+                <span style="color: #5B6175; font-size: 13px">{{r.sub}}</span>
+              </span>
+              <span style="font-family: 'Geist Mono', monospace; font-weight: 600; font-size: 20px; font-variant-numeric: tabular-nums; text-align: right">{{r.v}}</span>
+            </li>
+          </sc-for>
+        </ol>
+      </div>
+
+      <aside aria-label="Destacados" style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+        <h2 style="margin: 0; font-family: 'Bricolage Grotesque', Geist, sans-serif; font-size: 22px; font-weight: 700">Destacados</h2>
+        <div class="lift" style="background: #FFFFFF; border: 1px solid #E3E5EC; border-radius: 20px; padding: 18px; display: flex; gap: 14px; align-items: center">
+          <span style="width: 48px; height: 48px; border-radius: 14px; background: #FFF0C2; display: grid; place-items: center; flex: none">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F1222" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 12h16"></path><path d="M8 8l-4 4 4 4"></path><path d="M16 8l4 4-4 4"></path></svg>
+          </span>
+          <span style="display: flex; flex-direction: column; min-width: 0">
+            <span style="font-size: 13px; color: #5B6175">Mayor reducción de cintura</span>
+            <span style="font-weight: 600; font-size: 17px">Chuy · <span style="font-family: 'Geist Mono', monospace; color: #1C7A4E">−5.0 cm</span></span>
+          </span>
+        </div>
+        <div class="lift" style="background: #FFFFFF; border: 1px solid #E3E5EC; border-radius: 20px; padding: 18px; display: flex; gap: 14px; align-items: center">
+          <span style="width: 48px; height: 48px; border-radius: 14px; background: #D6E0FF; display: grid; place-items: center; flex: none">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F1222" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 18l6-6 4 4 6-8"></path><path d="M14 8h6v6"></path></svg>
+          </span>
+          <span style="display: flex; flex-direction: column; min-width: 0">
+            <span style="font-size: 13px; color: #5B6175">Mayor baja de IMC</span>
+            <span style="font-weight: 600; font-size: 17px">Chuy · <span style="font-family: 'Geist Mono', monospace; color: #1C7A4E">36.4 → 35.2</span></span>
+          </span>
+        </div>
+        <div class="lift" style="background: #FFFFFF; border: 1px solid #E3E5EC; border-radius: 20px; padding: 18px; display: flex; gap: 14px; align-items: center">
+          <span style="width: 48px; height: 48px; border-radius: 14px; background: #F6E1FF; display: grid; place-items: center; flex: none">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0F1222" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M8 12h8"></path></svg>
+          </span>
+          <span style="display: flex; flex-direction: column; min-width: 0">
+            <span style="font-size: 13px; color: #5B6175">La más constante</span>
+            <span style="font-weight: 600; font-size: 17px">Lupita · <span style="font-family: 'Geist Mono', monospace">±0.5 kg</span></span>
+          </span>
+        </div>
+        <details style="background: #E6E8EF; border-radius: 20px; padding: 16px 18px">
+          <summary style="cursor: pointer; font-weight: 600">Cómo se calcula</summary>
+          <p style="margin: 10px 0 0; color: #3D4356; font-size: 14px">Kilos a favor cuentan solo en la dirección del objetivo. El porcentaje divide entre el peso inicial. El cumplimiento compara contra la meta en kg de cada quien; mantenerse dentro del margen vale 100%.</p>
+        </details>
+      </aside>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1640}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { mode: 'kilos' };
+  }
+  renderVals() {
+    var people = {
+      Rosela: { ini: 'RO', bg: '#FFD9CC', obj: '↓ Bajar', chip: 'background:#FFE8E0;color:#9A2E10' },
+      Benja: { ini: 'BE', bg: '#D6E0FF', obj: '↓ Bajar', chip: 'background:#FFE8E0;color:#9A2E10' },
+      Mau: { ini: 'MA', bg: '#CDEFE3', obj: '↑ Subir', chip: 'background:#E3E9FF;color:#1C3FD6' },
+      Lupita: { ini: 'LU', bg: '#F6E1FF', obj: '= Mantener', chip: 'background:#ECEDF2;color:#3D4356' },
+      Chuy: { ini: 'CH', bg: '#FFF0C2', obj: '↓ Bajar', chip: 'background:#FFE8E0;color:#9A2E10' }
+    };
+    var data = {
+      kilos: {
+        label: 'Kilos a favor', short: 'kilos a favor', title: 'Más kilos a favor', desc: 'Cambio de peso en la dirección de su objetivo',
+        list: [
+          { n: 'Chuy', v: '+4.0 kg', raw: 4.0, sub: 'Bajó 4.0 kg' },
+          { n: 'Benja', v: '+3.4 kg', raw: 3.4, sub: 'Bajó 3.4 kg' },
+          { n: 'Rosela', v: '+2.2 kg', raw: 2.2, sub: 'Bajó 2.2 kg' },
+          { n: 'Mau', v: '+2.2 kg', raw: 2.2, sub: 'Subió 2.2 kg' },
+          { n: 'Lupita', v: '0.0 kg', raw: 0, sub: 'Se movió 0.5 kg, dentro del margen' }
+        ]
+      },
+      pct: {
+        label: '% de cambio', short: 'porcentaje de cambio', title: 'Mayor cambio porcentual', desc: 'Kilos a favor entre el peso inicial',
+        list: [
+          { n: 'Benja', v: '+3.7%', raw: 3.68, sub: '92.5 → 89.1 kg' },
+          { n: 'Mau', v: '+3.6%', raw: 3.61, sub: '61.0 → 63.2 kg' },
+          { n: 'Chuy', v: '+3.4%', raw: 3.39, sub: '118.0 → 114.0 kg' },
+          { n: 'Rosela', v: '+3.2%', raw: 3.24, sub: '68.0 → 65.8 kg' },
+          { n: 'Lupita', v: '0.0%', raw: 0, sub: '58.4 → 58.9 kg' }
+        ]
+      },
+      meta: {
+        label: 'Cumplimiento', short: 'cumplimiento de la meta', title: 'Cumplimiento de la meta', desc: 'Qué parte de su propia meta logró cada quien',
+        list: [
+          { n: 'Lupita', v: '100%', raw: 100, sub: 'Dentro del margen de ±1 kg' },
+          { n: 'Mau', v: '73%', raw: 73, sub: 'Meta 3.0 kg · logró 2.2' },
+          { n: 'Benja', v: '68%', raw: 68, sub: 'Meta 5.0 kg · logró 3.4' },
+          { n: 'Rosela', v: '55%', raw: 55, sub: 'Meta 4.0 kg · logró 2.2' },
+          { n: 'Chuy', v: '50%', raw: 50, sub: 'Meta 8.0 kg · logró 4.0' }
+        ]
+      }
+    };
+    var self = this;
+    var mode = this.state.mode;
+    var cur = data[mode];
+    var max = Math.max.apply(null, cur.list.map(function (x) { return x.raw; })) || 1;
+    var base = 'border: 0; cursor: pointer; font: 600 14px Geist, system-ui, sans-serif; padding: 10px 16px; border-radius: 10px; min-height: 44px; ';
+    var modes = ['kilos', 'pct', 'meta'].map(function (k) {
+      var on = k === mode;
+      return {
+        label: data[k].label,
+        selected: on ? 'true' : 'false',
+        style: base + (on ? 'background:#0F1222;color:#FFFFFF;box-shadow:0 4px 14px rgba(15,18,34,.18)' : 'background:transparent;color:#3D4356'),
+        pick: function () { self.setState({ mode: k }); }
+      };
+    });
+    var rows = cur.list.map(function (x, i) {
+      var p = people[x.n];
+      var w = Math.max(2, Math.round((x.raw / max) * 100));
+      var color = i === 0 ? '#FF5B2E' : '#2F5BFF';
+      return {
+        pos: i + 1, n: x.n, v: x.v, sub: x.sub, ini: p.ini, obj: p.obj,
+        avatarStyle: 'background:' + p.bg, chipStyle: p.chip,
+        barStyle: 'width:' + w + '%;background:' + color
+      };
+    });
+    var cols = [
+      { i: 1, h: 132, s: 'background:#2F5BFF;color:#FFFFFF' },
+      { i: 0, h: 184, s: 'background:#FF5B2E;color:#1B0A03' },
+      { i: 2, h: 104, s: 'background:#0F1222;color:#FFFFFF' }
+    ];
+    var podium = cols.map(function (c) {
+      var r = rows[c.i];
+      return {
+        n: r.n, v: r.v, sub: r.sub, ini: r.ini, pos: c.i + 1,
+        avatarStyle: 'background:' + people[r.n].bg + (c.i === 0 ? ';box-shadow:0 0 0 4px #FFFFFF, 0 0 0 7px #FF5B2E' : ''),
+        colStyle: 'height:' + c.h + 'px;' + c.s
+      };
+    });
+    return { modes: modes, rows: rows, podium: podium, current: cur };
+  }
+}
+</script>
+</body>
+</html>
