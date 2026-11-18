@@ -29,6 +29,8 @@ export type TableroProps = {
   };
   destacados: { titulo: string; nombre: string; valor: string; icono: 'cintura' | 'imc' | 'constante' | 'medida' }[];
   initial?: RankingKey;
+  /** Vista previa con DEMO; no enlaza a fichas reales. */
+  esDemo?: boolean;
 };
 
 const MODES: { key: RankingKey; label: string; short: string; title: string; desc: string }[] = [
@@ -108,6 +110,7 @@ export default function Tablero({
   resumen,
   destacados,
   initial = 'kilos',
+  esDemo = false,
 }: TableroProps) {
   const router = useRouter();
   const [, startTransition] = useTransition();
@@ -124,39 +127,6 @@ export default function Tablero({
     });
   }
 
-  if (n === 0 && list.length === 0) {
-    return (
-      <div className="sec">
-        {avisos.length > 0 && (
-          <ul className="warns">
-            {avisos.map((a) => (
-              <li key={a}>{a}</li>
-            ))}
-          </ul>
-        )}
-        <div className="card empty">
-          <h2>Todavía no hay nada que comparar</h2>
-          <p className="muted">Carga o captura los datos iniciales y los finales en Captura. Cada persona necesita aparecer en las dos con el mismo nombre.</p>
-          <Link className="btn primary" href="/datos">
-            Ir a Captura
-          </Link>
-        </div>
-        {pendientes.length > 0 && (
-          <div className="card sec">
-            <h2>Sin comparar todavía</h2>
-            <ul style={{ margin: 0, paddingLeft: 18 }}>
-              {pendientes.map((p) => (
-                <li key={p.nombre}>
-                  <strong>{p.nombre}</strong>: {p.motivo}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-    );
-  }
-
   const top = list.slice(0, 3);
   const podiumOrder = [top[1], top[0], top[2]].filter(Boolean) as Item[];
   const podiumSlots = podiumOrder.map((it) => {
@@ -165,7 +135,21 @@ export default function Tablero({
   });
 
   return (
-    <div className="tablero sec">
+    <div className={`tablero sec${esDemo ? ' tablero-demo' : ''}`}>
+      {esDemo && (
+        <div className="banner-fase">
+          <div>
+            <strong>Vista de ejemplo</strong>
+            <p className="muted" style={{ margin: '4px 0 0' }}>
+              Así se ve el tablero con datos de muestra. No son resultados reales. Captura el inicio y el final para
+              ver el tuyo.
+            </p>
+          </div>
+          <Link className="btn primary" href="/datos">
+            Empezar en Captura
+          </Link>
+        </div>
+      )}
       {avisos.length > 0 && (
         <ul className="warns">
           {avisos.map((a) => (
@@ -176,7 +160,9 @@ export default function Tablero({
 
       <div className="hero-board">
         <section className="hero-copy">
-          <span className="eyebrow">Corte final · {n} participante{n === 1 ? '' : 's'}</span>
+          <span className="eyebrow">
+            {esDemo ? 'Ejemplo' : 'Corte final'} · {n} participante{n === 1 ? '' : 's'}
+          </span>
           <h1 className="hero-title">¿Quién avanzó más?</h1>
           <p className="hero-sub">Cada quien contra su propia meta. Cambia de ranking para ver cómo se mueve el podio.</p>
         </section>
@@ -291,25 +277,34 @@ export default function Tablero({
               const chip = obj ? chipObjetivo(obj) : null;
               const w = Math.max(2, Math.round(Math.max(0, Math.min(1, it.barra)) * 100));
               const barColor = i === 0 ? 'var(--first)' : 'var(--accent)';
+              const row = (
+                <>
+                  <span className="board-pos num">{i + 1}</span>
+                  <span className="avatar sm" style={{ background: colorAvatar(it.nombre) }}>
+                    {iniciales(it.nombre)}
+                  </span>
+                  <span className="board-mid">
+                    <span className="board-line">
+                      <span className="board-name">{it.nombre}</span>
+                      {chip && <span className={chip.className}>{chip.label}</span>}
+                    </span>
+                    <span className="board-bar">
+                      <i style={{ width: `${w}%`, background: barColor }} />
+                    </span>
+                    <span className="board-sub muted">{it.sub}</span>
+                  </span>
+                  <span className="board-val num">{it.principal}</span>
+                </>
+              );
               return (
                 <li key={it.nombre}>
-                  <Link href={`/persona/${encodeURIComponent(it.nombre)}`} className="board-row">
-                    <span className="board-pos num">{i + 1}</span>
-                    <span className="avatar sm" style={{ background: colorAvatar(it.nombre) }}>
-                      {iniciales(it.nombre)}
-                    </span>
-                    <span className="board-mid">
-                      <span className="board-line">
-                        <span className="board-name">{it.nombre}</span>
-                        {chip && <span className={chip.className}>{chip.label}</span>}
-                      </span>
-                      <span className="board-bar">
-                        <i style={{ width: `${w}%`, background: barColor }} />
-                      </span>
-                      <span className="board-sub muted">{it.sub}</span>
-                    </span>
-                    <span className="board-val num">{it.principal}</span>
-                  </Link>
+                  {esDemo ? (
+                    <div className="board-row">{row}</div>
+                  ) : (
+                    <Link href={`/persona/${encodeURIComponent(it.nombre)}`} className="board-row">
+                      {row}
+                    </Link>
+                  )}
                 </li>
               );
             })}

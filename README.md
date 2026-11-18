@@ -50,8 +50,7 @@ Acepta `.xlsx`, `.xls` y `.csv` (primera hoja). Los encabezados no distinguen ma
 | `SESSION_SECRET` | Firma de la sesión. Si falta, se usa `ADMIN_PASSWORD`. | — |
 | `DATABASE_PATH` | Ruta del archivo SQLite. | `./data/reto.db` (en Docker: `/data/reto.db`) |
 | `SEED_DEMO` | `true` carga 5 personas de ejemplo la primera vez con la base vacía. No se vuelven a cargar después de vaciar. | `false` |
-| `PORT` | Puerto de `npm run dev` / `npm start` (Next.js). | `3000` |
-| `HOST_PORT` | Puerto del host con `docker compose` (mapea al 3000 del contenedor). En Dokploy Compose, si el 3000 del servidor está ocupado. | `3000` |
+| `PORT` | Puerto en tu máquina: `npm run dev` / `npm start` y mapeo de `docker compose` (el contenedor sigue en 3000). | `3000` |
 
 ## Desarrollo local
 
@@ -62,8 +61,6 @@ npm run dev                    # http://localhost:3000 (o el PORT de .env)
 npm test                       # pruebas del cálculo, el parser de Excel y la validación
 ```
 
-En `.env`, `PORT` controla el servidor local; `HOST_PORT` solo el mapeo de Docker Compose. Pon el mismo número en ambos si quieres el mismo puerto en los dos flujos.
-
 La base se crea sola en `./data/reto.db`.
 
 ## Docker
@@ -71,7 +68,7 @@ La base se crea sola en `./data/reto.db`.
 ```bash
 docker compose up --build      # http://localhost:3000
 ADMIN_PASSWORD=mi-clave SEED_DEMO=true docker compose up --build
-HOST_PORT=3100 docker compose up --build   # si el 3000 ya está ocupado: http://localhost:3100
+PORT=3100 docker compose up --build   # si el 3000 ya está ocupado: http://localhost:3100
 ```
 
 La base vive en el volumen `/data`. Sin volumen, los datos se pierden al recrear el contenedor.
@@ -97,10 +94,10 @@ El Dockerfile ya trae un `HEALTHCHECK` contra `/api/health`.
 También funciona con `docker-compose.yml`. En **Environment** agrega `ADMIN_PASSWORD` y, si el puerto 3000 del servidor ya está ocupado (error `port is already allocated`), un puerto libre:
 
 ```
-HOST_PORT=3100
+PORT=3100
 ```
 
-El volumen `reto-data` ya viene definido en el compose, así que la base persiste entre despliegues. Con un dominio de Dokploy, el tráfico entra por el puerto 3000 del contenedor sin importar el valor de `HOST_PORT`.
+El volumen `reto-data` ya viene definido en el compose, así que la base persiste entre despliegues. Con un dominio de Dokploy, el tráfico entra por el puerto 3000 del contenedor sin importar el valor de `PORT` en el host.
 
 > Si usas un volumen tipo *Bind* en vez de *Volume*, la carpeta del host debe poder escribirla el usuario `node` (uid 1000): `chown 1000:1000 <carpeta>`.
 

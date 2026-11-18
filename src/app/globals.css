@@ -203,6 +203,23 @@ h2 { font-size: 1.35rem; font-weight: 700; }
   color: var(--chip-bajar-fg);
   white-space: nowrap;
 }
+.banner-fase {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.banner-fase strong { font-size: 15px; }
+.tablero-demo .podium-card,
+.tablero-demo .kpi-row,
+.tablero-demo .board-cols {
+  opacity: 0.98;
+}
 
 .header-actions {
   display: flex;
