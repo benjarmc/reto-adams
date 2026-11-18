@@ -50,6 +50,7 @@ Acepta `.xlsx`, `.xls` y `.csv` (primera hoja). Los encabezados no distinguen ma
 | `SESSION_SECRET` | Firma de la sesión. Si falta, se usa `ADMIN_PASSWORD`. | — |
 | `DATABASE_PATH` | Ruta del archivo SQLite. | `./data/reto.db` (en Docker: `/data/reto.db`) |
 | `SEED_DEMO` | `true` carga 5 personas de ejemplo la primera vez con la base vacía. No se vuelven a cargar después de vaciar. | `false` |
+| `HOST_PORT` | Puerto del servidor donde se publica la app con `docker compose` o Dokploy tipo Compose. El contenedor siempre escucha en 3000. | `3000` |
 
 ## Desarrollo local
 
@@ -67,6 +68,7 @@ La base se crea sola en `./data/reto.db`.
 ```bash
 docker compose up --build      # http://localhost:3000
 ADMIN_PASSWORD=mi-clave SEED_DEMO=true docker compose up --build
+HOST_PORT=3100 docker compose up --build   # si el 3000 ya está ocupado: http://localhost:3100
 ```
 
 La base vive en el volumen `/data`. Sin volumen, los datos se pierden al recrear el contenedor.
@@ -86,6 +88,16 @@ La forma más simple es una **Application** con el Dockerfile del repo.
 5. **Deploy**.
 
 El Dockerfile ya trae un `HEALTHCHECK` contra `/api/health`.
+
+### Si prefieres el tipo Compose
+
+También funciona con `docker-compose.yml`. En **Environment** agrega `ADMIN_PASSWORD` y, si el puerto 3000 del servidor ya está ocupado (error `port is already allocated`), un puerto libre:
+
+```
+HOST_PORT=3100
+```
+
+El volumen `reto-data` ya viene definido en el compose, así que la base persiste entre despliegues. Con un dominio de Dokploy, el tráfico entra por el puerto 3000 del contenedor sin importar el valor de `HOST_PORT`.
 
 > Si usas un volumen tipo *Bind* en vez de *Volume*, la carpeta del host debe poder escribirla el usuario `node` (uid 1000): `chown 1000:1000 <carpeta>`.
 
