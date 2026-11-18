@@ -1197,6 +1197,9 @@ html.dark .board-bar { background: var(--surface-2); }
   gap: 4px;
   min-width: 0;
 }
+.card-field-span {
+  grid-column: 1 / -1;
+}
 .card-field-label {
   font-size: 12px;
   font-weight: 600;
@@ -1209,6 +1212,30 @@ html.dark .board-bar { background: var(--surface-2); }
   width: 100%;
   min-height: 44px;
   font-size: 16px;
+}
+.obj-seg {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.obj-seg button {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--fg);
+  font: 600 14px var(--font-body);
+  cursor: pointer;
+  padding: 8px 6px;
+}
+.obj-seg button.on {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+.obj-seg button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 .persona-card-foot {
   display: flex;

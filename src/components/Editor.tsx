@@ -52,9 +52,17 @@ function N({ id, value, label, onChange }: { id: string; value: number | null; l
   );
 }
 
-function CardField({ label, children }: { label: ReactNode; children: ReactNode }) {
+function CardField({
+  label,
+  children,
+  className,
+}: {
+  label: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="card-field">
+    <div className={`card-field${className ? ` ${className}` : ''}`}>
       <div className="card-field-label">{label}</div>
       {children}
     </div>
@@ -420,7 +428,7 @@ export default function Editor({ estado, conLogin }: { estado: Estado; conLogin:
               {armed === (tab === 'ini' ? 'ci' : 'cf')
                 ? '¿Seguro? Toca otra vez'
                 : tab === 'ini'
-                  ? 'Vaciar tabla'
+                  ? 'Vaciar todo'
                   : 'Limpiar finales'}
             </button>
           </div>
@@ -519,20 +527,20 @@ export default function Editor({ estado, conLogin }: { estado: Estado; conLogin:
                     <span className={`status-chip ${st.kind}`}>{st.text}</span>
                   </header>
                   <div className="persona-card-grid">
-                    <CardField label="Objetivo">
-                      <select
-                        className="cell"
-                        value={r.objetivo}
-                        aria-label="Objetivo"
-                        onChange={(e) => patchIni(r.id, { objetivo: e.target.value as Objetivo | '' })}
-                      >
-                        <option value="">Elegir</option>
+                    <CardField label="Objetivo" className="card-field-span">
+                      <div className="obj-seg" role="group" aria-label="Objetivo">
                         {(Object.keys(GOALS) as Objetivo[]).map((g) => (
-                          <option key={g} value={g}>
+                          <button
+                            key={g}
+                            type="button"
+                            className={r.objetivo === g ? 'on' : undefined}
+                            aria-pressed={r.objetivo === g}
+                            onClick={() => patchIni(r.id, { objetivo: g })}
+                          >
                             {GOALS[g]}
-                          </option>
+                          </button>
                         ))}
-                      </select>
+                      </div>
                     </CardField>
                     <CardField
                       label={
