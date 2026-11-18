@@ -59,7 +59,7 @@ export default function MetasInicio({
 
       <section className="hero-copy" style={{ maxWidth: 640 }}>
         <span className="eyebrow">
-          {lista.length} participante{lista.length === 1 ? '' : 's'} · margen ±{f1(margen)} kg
+          {lista.length} participante{lista.length === 1 ? '' : 's'}
         </span>
         <h1 className="hero-title">Metas del reto</h1>
         <p className="hero-sub">Así quedó cada quien al inicio: objetivo, meta a cambiar y peso de partida.</p>
