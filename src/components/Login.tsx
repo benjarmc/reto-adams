@@ -29,7 +29,7 @@ export default function Login() {
   }
 
   return (
-    <form className="card sec" onSubmit={entrar} style={{ maxWidth: 380 }}>
+    <form className="card sec login-card" onSubmit={entrar}>
       <h2>Captura de datos</h2>
       <p className="muted small" style={{ margin: 0 }}>
         Los resultados son públicos. Para cargar o editar datos, entra con la contraseña del reto.
@@ -46,7 +46,11 @@ export default function Login() {
           required
         />
       </div>
-      {error && <div className="status err" role="alert">{error}</div>}
+      {error && (
+        <div className="status err" role="alert">
+          {error}
+        </div>
+      )}
       <div className="tools">
         <button className="btn primary" type="submit" disabled={enviando}>
           {enviando ? 'Entrando…' : 'Entrar'}

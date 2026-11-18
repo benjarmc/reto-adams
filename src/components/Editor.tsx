@@ -160,18 +160,18 @@ export default function Editor({ estado, conLogin }: { estado: Estado; conLogin:
 
   return (
     <div className="sec">
-      <div className="card sec">
+      <div className="coach-sticky sec">
         <div className="head-row">
           <h2>Captura de datos</h2>
           <div className="tools">
-            <span className={`status${msg?.err ? ' err' : ''}`} role="status">
+            <span className={`status${msg?.err ? ' err' : msg && !dirty ? ' ok' : ''}`} role="status">
               {dirty && !msg?.err ? 'Hay cambios sin guardar.' : msg?.text}
             </span>
             <button className="btn primary" onClick={guardar} disabled={saving || !dirty}>
               {saving ? 'Guardando…' : 'Guardar'}
             </button>
             {conLogin && (
-              <button className="btn" onClick={salir}>
+              <button className="btn ghost" onClick={salir}>
                 Salir
               </button>
             )}
@@ -220,7 +220,7 @@ export default function Editor({ estado, conLogin }: { estado: Estado; conLogin:
               una columna por medida en cm, como Cintura, Cadera o Brazo. El IMC se calcula solo.
             </p>
             <div className="tools">
-              <label className="btn primary" htmlFor="file-ini">
+              <label className="btn primary" htmlFor="file-ini" style={{ cursor: 'pointer' }}>
                 Cargar Excel inicial
               </label>
               <input
@@ -378,7 +378,7 @@ export default function Editor({ estado, conLogin }: { estado: Estado; conLogin:
               meta se toman de los datos iniciales. La estatura es opcional.
             </p>
             <div className="tools">
-              <label className="btn primary" htmlFor="file-fin">
+              <label className="btn primary" htmlFor="file-fin" style={{ cursor: 'pointer' }}>
                 Cargar Excel final
               </label>
               <input
