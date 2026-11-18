@@ -1,14 +1,17 @@
 # Para probar la imagen en tu máquina:  docker compose up --build
-# En Dokploy lo más simple es crear una "Application" con este Dockerfile (ver README).
+# En Dokploy (Compose): el dominio debe usar Container Port 3000.
+# Si el host ya tiene el 3000 ocupado: HOST_PORT=3100 en Environment.
 services:
   reto:
     build: .
     image: reto-adams:latest
     restart: unless-stopped
     ports:
-      # Puerto del host (PORT en .env). Dentro del contenedor siempre es 3000.
-      - "${PORT:-3000}:3000"
+      # Izquierda = puerto del HOST. Derecha = puerto DENTRO del contenedor (siempre 3000).
+      - "${HOST_PORT:-3000}:3000"
     environment:
+      # Fijo: la app siempre escucha en 3000. No uses PORT en Dokploy para el mapeo del host.
+      PORT: "3000"
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       SESSION_SECRET: ${SESSION_SECRET:-}
       SEED_DEMO: ${SEED_DEMO:-false}

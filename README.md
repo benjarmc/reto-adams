@@ -50,7 +50,8 @@ Acepta `.xlsx`, `.xls` y `.csv` (primera hoja). Los encabezados no distinguen ma
 | `SESSION_SECRET` | Firma de la sesión. Si falta, se usa `ADMIN_PASSWORD`. | — |
 | `DATABASE_PATH` | Ruta del archivo SQLite. | `./data/reto.db` (en Docker: `/data/reto.db`) |
 | `SEED_DEMO` | `true` carga 5 personas de ejemplo la primera vez con la base vacía. No se vuelven a cargar después de vaciar. | `false` |
-| `PORT` | Puerto en tu máquina: `npm run dev` / `npm start` y mapeo de `docker compose` (el contenedor sigue en 3000). | `3000` |
+| `PORT` | Solo local: `npm run dev` / `npm start`. | `3000` |
+| `HOST_PORT` | Solo Docker Compose: puerto del **host** (mapea a 3000 dentro del contenedor). | `3000` |
 
 ## Desarrollo local
 
@@ -68,7 +69,7 @@ La base se crea sola en `./data/reto.db`.
 ```bash
 docker compose up --build      # http://localhost:3000
 ADMIN_PASSWORD=mi-clave SEED_DEMO=true docker compose up --build
-PORT=3100 docker compose up --build   # si el 3000 ya está ocupado: http://localhost:3100
+HOST_PORT=3100 docker compose up --build   # si el 3000 del host ya está ocupado
 ```
 
 La base vive en el volumen `/data`. Sin volumen, los datos se pierden al recrear el contenedor.
@@ -91,13 +92,18 @@ El Dockerfile ya trae un `HEALTHCHECK` contra `/api/health`.
 
 ### Si prefieres el tipo Compose
 
-También funciona con `docker-compose.yml`. En **Environment** agrega `ADMIN_PASSWORD` y, si el puerto 3000 del servidor ya está ocupado (error `port is already allocated`), un puerto libre:
+También funciona con `docker-compose.yml`. En **Environment** agrega:
 
 ```
-PORT=3100
+ADMIN_PASSWORD=<una contraseña larga>
+HOST_PORT=3100
 ```
 
-El volumen `reto-data` ya viene definido en el compose, así que la base persiste entre despliegues. Con un dominio de Dokploy, el tráfico entra por el puerto 3000 del contenedor sin importar el valor de `PORT` en el host.
+Usa `HOST_PORT` si el deploy falla con `Bind for 0.0.0.0:3000 failed: port is already allocated`.
+
+En **Domains**, el **Container Port debe ser `3000`** (puerto interno del contenedor), no 3100. El 3100 solo es el puerto del host; Traefik/Cloudflare hablan con el contenedor en 3000. Si pones 3100 en el dominio verás **502**.
+
+El volumen `reto-data` ya viene definido en el compose. No definas `PORT=3100` en Environment de Dokploy: el compose fuerza `PORT=3000` dentro del contenedor.
 
 > Si usas un volumen tipo *Bind* en vez de *Volume*, la carpeta del host debe poder escribirla el usuario `node` (uid 1000): `chown 1000:1000 <carpeta>`.
 
