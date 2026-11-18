@@ -165,6 +165,12 @@ export interface Item {
 const verbo = (d: number): string =>
   Math.abs(d) < 0.05 ? 'Sin cambio de peso' : `${d < 0 ? 'Bajó' : 'Subió'} ${f1(Math.abs(d))} kg`;
 
+function subMantener(dPeso: number, margen: number): string {
+  const mov = f1(Math.abs(dPeso));
+  if (Math.abs(dPeso) <= margen) return `Se movió ${mov} kg · dentro del margen (±${f1(margen)})`;
+  return `Se movió ${mov} kg · pasó el margen (±${f1(margen)})`;
+}
+
 export function rankings(filas: Fila[], margen: number) {
   const k = filas.slice().sort((a, b) => b.fav - a.fav);
   const maxK = Math.max(0.001, ...k.map((r) => r.fav));
@@ -172,7 +178,10 @@ export function rankings(filas: Fila[], margen: number) {
     nombre: r.nombre,
     principal: `${sg(r.fav)} kg`,
     tono: tono(r.fav),
-    sub: `${verbo(r.dPeso)} · objetivo: ${GOALS[r.objetivo].toLowerCase()}`,
+    sub:
+      r.objetivo === 'mantener'
+        ? subMantener(r.dPeso, margen)
+        : `${verbo(r.dPeso)} · objetivo: ${GOALS[r.objetivo].toLowerCase()}`,
     barra: r.fav / maxK,
   }));
 
@@ -182,7 +191,10 @@ export function rankings(filas: Fila[], margen: number) {
     nombre: r.nombre,
     principal: `${sg(r.favPct)}%`,
     tono: tono(r.favPct),
-    sub: `${f1(r.pI)} → ${f1(r.pF)} kg · ${GOALS[r.objetivo].toLowerCase()}`,
+    sub:
+      r.objetivo === 'mantener'
+        ? subMantener(r.dPeso, margen)
+        : `${f1(r.pI)} → ${f1(r.pF)} kg · ${GOALS[r.objetivo].toLowerCase()}`,
     barra: r.favPct / maxP,
   }));
 
@@ -195,7 +207,7 @@ export function rankings(filas: Fila[], margen: number) {
       tono: v >= 100 ? 'good' : v < 0 ? 'bad' : '',
       sub:
         r.objetivo === 'mantener'
-          ? `margen ±${f1(margen)} kg · se movió ${f1(Math.abs(r.dPeso))} kg`
+          ? subMantener(r.dPeso, margen)
           : `meta ${f1(r.meta)} kg · a favor ${sg(r.fav)} kg`,
       barra: v / 100,
     };

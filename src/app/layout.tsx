@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   description: 'Reto de cambio de Adams Academia de Gimnasia: peso, IMC y medidas, con rankings del progreso.',
 };
 
-const themeBoot = `(function(){try{var t=localStorage.getItem('theme');if(t!=='light'&&t!=='dark'){t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.classList.add(t);document.documentElement.style.colorScheme=t;}catch(e){}})();`;
+const themeBoot = `(function(){try{var t=localStorage.getItem('theme');if(t!=='light'&&t!=='dark'){t='light';}document.documentElement.classList.add(t);document.documentElement.style.colorScheme=t;}catch(e){document.documentElement.classList.add('light');}})();`;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
