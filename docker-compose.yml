@@ -1,16 +1,13 @@
-# Para probar la imagen en tu máquina:  docker compose up --build
-# En Dokploy (Compose): el dominio debe usar Container Port 3000.
-# Si el host ya tiene el 3000 ocupado: HOST_PORT=3100 en Environment.
+# En Dokploy: Domains → Container Port = 3000 (no el puerto del host).
+# Traefik alcanza el servicio por la red interna; no hace falta publicar puertos al host.
 services:
   reto:
     build: .
     image: reto-adams:latest
     restart: unless-stopped
-    ports:
-      # Izquierda = puerto del HOST. Derecha = puerto DENTRO del contenedor (siempre 3000).
-      - "${HOST_PORT:-3000}:3000"
+    expose:
+      - "3000"
     environment:
-      # Fijo: la app siempre escucha en 3000. No uses PORT en Dokploy para el mapeo del host.
       PORT: "3000"
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       SESSION_SECRET: ${SESSION_SECRET:-}
